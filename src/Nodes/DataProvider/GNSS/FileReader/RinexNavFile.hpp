@@ -80,7 +80,7 @@ class RinexNavFile : public Node, public FileReader
     void readOrbits();
 
     /// @brief Supported RINEX versions
-    static inline const std::set<double> _supportedVersions = { 3.03, 3.04 };
+    static inline const std::set<double> _supportedVersions = { 3.05, 3.04, 3.03, 3.02, 2.11, 2.10, 2.01 }; // TODO version 4.00
 
     /// @brief Data object to share over the output pin
     GnssNavInfo _gnssNavInfo;

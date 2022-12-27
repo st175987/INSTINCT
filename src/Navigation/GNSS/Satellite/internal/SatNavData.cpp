@@ -6,6 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-#define CATCH_CONFIG_MAIN // This tells the catch header to generate a main
+#include "SatNavData.hpp"
 
-#include <catch2/catch.hpp>
+namespace NAV
+{
+
+SatNavData::SatNavData(Type type, const InsTime& refTime)
+    : type(type), refTime(refTime) {}
+
+} // namespace NAV
