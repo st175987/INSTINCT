@@ -17,6 +17,7 @@
 
 #include "util/Eigen.hpp"
 #include <array>
+#include <vector>
 
 namespace NAV
 {
@@ -73,6 +74,12 @@ class AllanDeviation : public Node
     void receiveImuObs(InputPin::NodeDataQueue& queue, size_t pinIdx);
 
     int _valueObject; ///< Value which is represented over the Object pin
+
+    // ------------------------------------------------------------ Algorithm --------------------------------------------------------------
+
+    /// Cumulative Sums of accelerometer and gyroscope data
+    std::vector<Eigen::Vector3d> _accelCumSum{ Eigen::Vector3d::Zero() };
+    std::vector<Eigen::Vector3d> _gyroCumSum{ Eigen::Vector3d::Zero() };
 };
 
 } // namespace NAV

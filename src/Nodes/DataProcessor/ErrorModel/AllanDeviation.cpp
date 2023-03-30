@@ -32,7 +32,7 @@ NAV::AllanDeviation::AllanDeviation()
 
     nm::CreateOutputPin(this, "Object", Pin::Type::Object, { "AdevOutput" }, &_valueObject);
 
-    nm::CreateInputPin(this, "IMUObs", Pin::Type::Flow, { NAV::ImuObs::type() }, &AllanDeviation::receiveImuObs);
+    nm::CreateInputPin(this, "ImuObs", Pin::Type::Flow, { NAV::ImuObs::type() }, &AllanDeviation::receiveImuObs);
 }
 
 NAV::AllanDeviation::~AllanDeviation()
@@ -95,6 +95,9 @@ void NAV::AllanDeviation::deinitialize()
 void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, size_t /* pinIdx */)
 {
     auto obs = std::static_pointer_cast<const ImuObs>(queue.extract_front());
+
+    _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
+    _gyroCumSum.push_back(_accelCumSum.back() + obs->gyroUncompXYZ.value());
 
     notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
 }
