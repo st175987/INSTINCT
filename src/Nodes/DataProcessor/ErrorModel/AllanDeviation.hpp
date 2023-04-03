@@ -8,7 +8,7 @@
 
 /// @file AllanDeviation.hpp
 /// @brief Computes Allan Deviation
-/// @author M. Seyfried (st175987@stud.uni-stuttgart.de)
+/// @author M. Seyfried
 /// @date 2023-03-29
 
 #pragma once
@@ -80,6 +80,25 @@ class AllanDeviation : public Node
     /// Cumulative Sums of accelerometer and gyroscope data
     std::vector<Eigen::Vector3d> _accelCumSum{ Eigen::Vector3d::Zero() };
     std::vector<Eigen::Vector3d> _gyroCumSum{ Eigen::Vector3d::Zero() };
+
+    std::vector<unsigned int> _averagingFactors;
+    std::vector<unsigned int> _observationCount;
+    std::vector<Eigen::Vector3d> _accelAllanSum;
+    std::vector<Eigen::Vector3d> _gyroAllanSum;
+
+    std::vector<Eigen::Vector3d> _accelAllanVariance;
+    std::vector<Eigen::Vector3d> _gyroAllanVariance;
+
+    Eigen::Vector3d _accelTempSum;
+    Eigen::Vector3d _gyroTempSum;
+
+    unsigned int _vectorLength{ 0 };
+
+    unsigned int _averagingFactorsPerDecade{ 100 };
+
+    unsigned int _nextAveragingFactorExponent{ 1 };
+
+    unsigned int _nextAveragingFactor{ 1 };
 };
 
 } // namespace NAV

@@ -98,6 +98,40 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 
     _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
     _gyroCumSum.push_back(_accelCumSum.back() + obs->gyroUncompXYZ.value());
+    _vectorLength = static_cast<unsigned int>(_accelCumSum.size());
+
+    if (_vectorLength - 1 == _nextAveragingFactor * 2)
+    {
+        _averagingFactors.push_back(_nextAveragingFactor);
+        _observationCount.push_back(0);
+        _accelAllanSum.push_back(Eigen::Vector3d::Zero());
+        _gyroAllanSum.push_back(Eigen::Vector3d::Zero());
+        _accelAllanVariance.push_back(Eigen::Vector3d::Zero());
+        _gyroAllanVariance.push_back(Eigen::Vector3d::Zero());
+        while (static_cast<unsigned int>(round(pow(10, _nextAveragingFactorExponent / _averagingFactorsPerDecade))) == _nextAveragingFactor)
+        {
+            _nextAveragingFactorExponent++;
+        }
+        _nextAveragingFactor = static_cast<unsigned int>(round(pow(10, _nextAveragingFactorExponent / _averagingFactorsPerDecade)));
+    }
+
+    for (size_t i = 0; i < _averagingFactors.size(); i++)
+    {
+        _accelTempSum = _accelCumSum[_vectorLength + 1] - 2 * _accelCumSum[_vectorLength + 1 - _averagingFactors[i]] + _accelCumSum[_vectorLength + 1 - 2 * _averagingFactors[i]];
+        _accelAllanSum[i] += _accelTempSum.cwiseProduct(_accelTempSum);
+        _gyroTempSum = _gyroCumSum[_vectorLength + 1] - 2 * _gyroCumSum[_vectorLength + 1 - _averagingFactors[i]] + _gyroCumSum[_vectorLength + 1 - 2 * _averagingFactors[i]];
+        _gyroAllanSum[i] += _gyroTempSum.cwiseProduct(_gyroTempSum);
+        _observationCount[i]++;
+    }
+
+    if (_vectorLength % 1000 == 0)
+    {
+        for (size_t i = 0; i < _averagingFactors.size(); i++)
+        {
+            _accelAllanVariance[i] = _accelAllanSum[i] / (pow(_averagingFactors[i], 2) * _observationCount[i]);
+            _gyroAllanVariance[i] = _gyroAllanSum[i] / (pow(_averagingFactors[i], 2) * _observationCount[i]);
+        }
+    }
 
     notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
 }
