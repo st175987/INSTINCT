@@ -15,6 +15,8 @@
 
 #include "internal/Node/Node.hpp"
 
+#include "implot.h"
+
 #include "util/Eigen.hpp"
 #include <array>
 #include <vector>
@@ -99,6 +101,12 @@ class AllanDeviation : public Node
     unsigned int _nextAveragingFactorExponent{ 1 };
 
     unsigned int _nextAveragingFactor{ 1 };
+
+    // TODO: replace test plot with allan deviation plot
+    static const int _count{ 5001 };
+
+    std::array<double, _count> _x;
+    std::array<double, _count> _y;
 };
 
 } // namespace NAV

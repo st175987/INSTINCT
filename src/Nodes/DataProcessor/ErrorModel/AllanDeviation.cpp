@@ -57,6 +57,13 @@ std::string NAV::AllanDeviation::category()
 
 void NAV::AllanDeviation::guiConfig()
 {
+    // TODO: replace test plot with allan deviation plot
+    if (ImPlot::BeginPlot("Line Plot"))
+    {
+        ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+        ImPlot::PlotLine("test", _x.data(), _y.data(), _count);
+        ImPlot::EndPlot();
+    }
 }
 
 [[nodiscard]] json NAV::AllanDeviation::save() const
@@ -83,6 +90,9 @@ void NAV::AllanDeviation::restore(json const& j)
 bool NAV::AllanDeviation::initialize()
 {
     LOG_TRACE("{}: called", nameId());
+
+    _x.fill(nan(""));
+    _y.fill(nan(""));
 
     return true;
 }
@@ -131,6 +141,12 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
             _accelAllanVariance[i] = _accelAllanSum[i] / (pow(_averagingFactors[i], 2) * _observationCount[i]);
             _gyroAllanVariance[i] = _gyroAllanSum[i] / (pow(_averagingFactors[i], 2) * _observationCount[i]);
         }
+    }
+
+    if (_vectorLength <= _count)
+    {
+        _x.at(_vectorLength - 1) = static_cast<double>(_vectorLength - 1);
+        _y.at(_vectorLength - 1) = static_cast<double>(pow(_vectorLength - 1, 2));
     }
 
     notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
