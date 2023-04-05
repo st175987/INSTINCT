@@ -83,30 +83,25 @@ class AllanDeviation : public Node
     std::vector<Eigen::Vector3d> _accelCumSum{ Eigen::Vector3d::Zero() };
     std::vector<Eigen::Vector3d> _gyroCumSum{ Eigen::Vector3d::Zero() };
 
-    std::vector<unsigned int> _averagingFactors;
-    std::vector<unsigned int> _observationCount;
-    std::vector<Eigen::Vector3d> _accelAllanSum;
-    std::vector<Eigen::Vector3d> _gyroAllanSum;
+    std::vector<double> _averagingFactors;
+    std::vector<double> _observationCount;
 
-    std::vector<Eigen::Vector3d> _accelAllanVariance;
-    std::vector<Eigen::Vector3d> _gyroAllanVariance;
+    std::array<std::vector<double>, 3> _accelAllanSum;
+    std::array<std::vector<double>, 3> _gyroAllanSum;
+
+    std::array<std::vector<double>, 3> _accelAllanVariance;
+    std::array<std::vector<double>, 3> _gyroAllanVariance;
 
     Eigen::Vector3d _accelTempSum;
     Eigen::Vector3d _gyroTempSum;
 
-    unsigned int _vectorLength{ 0 };
+    unsigned int _cumSumLength{ 1 };
 
-    unsigned int _averagingFactorsPerDecade{ 100 };
+    double _averagingFactorsPerDecade{ 100 };
 
     unsigned int _nextAveragingFactorExponent{ 1 };
 
     unsigned int _nextAveragingFactor{ 1 };
-
-    // TODO: replace test plot with allan deviation plot
-    static const int _count{ 5001 };
-
-    std::array<double, _count> _x;
-    std::array<double, _count> _y;
 };
 
 } // namespace NAV

@@ -57,11 +57,12 @@ std::string NAV::AllanDeviation::category()
 
 void NAV::AllanDeviation::guiConfig()
 {
-    // TODO: replace test plot with allan deviation plot
     if (ImPlot::BeginPlot("Line Plot"))
     {
         ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-        ImPlot::PlotLine("test", _x.data(), _y.data(), _count);
+        ImPlot::PlotLine("avar x", _averagingFactors.data(), _accelAllanVariance.at(0).data(), static_cast<int>(_averagingFactors.size()));
+        ImPlot::PlotLine("avar y", _averagingFactors.data(), _accelAllanVariance.at(1).data(), static_cast<int>(_averagingFactors.size()));
+        ImPlot::PlotLine("avar z", _averagingFactors.data(), _accelAllanVariance.at(2).data(), static_cast<int>(_averagingFactors.size()));
         ImPlot::EndPlot();
     }
 }
@@ -91,9 +92,6 @@ bool NAV::AllanDeviation::initialize()
 {
     LOG_TRACE("{}: called", nameId());
 
-    _x.fill(nan(""));
-    _y.fill(nan(""));
-
     return true;
 }
 
@@ -108,45 +106,55 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 
     _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
     _gyroCumSum.push_back(_accelCumSum.back() + obs->gyroUncompXYZ.value());
-    _vectorLength = static_cast<unsigned int>(_accelCumSum.size());
+    _cumSumLength = static_cast<unsigned int>(_accelCumSum.size());
 
-    if (_vectorLength - 1 == _nextAveragingFactor * 2)
+    if (_cumSumLength - 1 == _nextAveragingFactor * 2)
     {
         _averagingFactors.push_back(_nextAveragingFactor);
         _observationCount.push_back(0);
-        _accelAllanSum.push_back(Eigen::Vector3d::Zero());
-        _gyroAllanSum.push_back(Eigen::Vector3d::Zero());
-        _accelAllanVariance.push_back(Eigen::Vector3d::Zero());
-        _gyroAllanVariance.push_back(Eigen::Vector3d::Zero());
-        while (static_cast<unsigned int>(round(pow(10, _nextAveragingFactorExponent / _averagingFactorsPerDecade))) == _nextAveragingFactor)
+        for (size_t i = 0; i < 3; i++)
+        {
+            _accelAllanSum.at(i).push_back(0);
+            _gyroAllanSum.at(i).push_back(0);
+            _accelAllanVariance.at(i).push_back(0);
+            _gyroAllanVariance.at(i).push_back(0);
+        }
+
+        while (static_cast<unsigned int>(round(pow(10., static_cast<double>(_nextAveragingFactorExponent) / _averagingFactorsPerDecade))) == _nextAveragingFactor)
         {
             _nextAveragingFactorExponent++;
         }
-        _nextAveragingFactor = static_cast<unsigned int>(round(pow(10, _nextAveragingFactorExponent / _averagingFactorsPerDecade)));
+
+        _nextAveragingFactor = static_cast<unsigned int>(round(pow(10., static_cast<double>(_nextAveragingFactorExponent) / _averagingFactorsPerDecade)));
     }
 
     for (size_t i = 0; i < _averagingFactors.size(); i++)
     {
-        _accelTempSum = _accelCumSum[_vectorLength + 1] - 2 * _accelCumSum[_vectorLength + 1 - _averagingFactors[i]] + _accelCumSum[_vectorLength + 1 - 2 * _averagingFactors[i]];
-        _accelAllanSum[i] += _accelTempSum.cwiseProduct(_accelTempSum);
-        _gyroTempSum = _gyroCumSum[_vectorLength + 1] - 2 * _gyroCumSum[_vectorLength + 1 - _averagingFactors[i]] + _gyroCumSum[_vectorLength + 1 - 2 * _averagingFactors[i]];
-        _gyroAllanSum[i] += _gyroTempSum.cwiseProduct(_gyroTempSum);
-        _observationCount[i]++;
+        _accelTempSum = _accelCumSum.at(_cumSumLength - 1)
+                        - 2 * _accelCumSum.at(_cumSumLength - 1 - static_cast<unsigned int>(_averagingFactors.at(i)))
+                        + _accelCumSum.at(_cumSumLength - 1 - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
+        _gyroTempSum = _gyroCumSum.at(_cumSumLength - 1)
+                       - 2 * _gyroCumSum.at(_cumSumLength - 1 - static_cast<unsigned int>(_averagingFactors.at(i)))
+                       + _gyroCumSum.at(_cumSumLength - 1 - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
+
+        for (size_t j = 0; j < 3; j++)
+        {
+            _accelAllanSum.at(j).at(i) += pow(_accelTempSum(static_cast<long>(j)), 2);
+            _gyroAllanSum.at(j).at(i) += pow(_gyroTempSum(static_cast<long>(j)), 2);
+        }
+        _observationCount.at(i)++;
     }
 
-    if (_vectorLength % 1000 == 0)
+    if (_cumSumLength % 1000 == 0)
     {
         for (size_t i = 0; i < _averagingFactors.size(); i++)
         {
-            _accelAllanVariance[i] = _accelAllanSum[i] / (pow(_averagingFactors[i], 2) * _observationCount[i]);
-            _gyroAllanVariance[i] = _gyroAllanSum[i] / (pow(_averagingFactors[i], 2) * _observationCount[i]);
+            for (size_t j = 0; j < 3; j++)
+            {
+                _accelAllanVariance.at(j).at(i) = _accelAllanSum.at(j).at(i) / (pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
+                _gyroAllanVariance.at(j).at(i) = _gyroAllanSum.at(j).at(i) / (pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
+            }
         }
-    }
-
-    if (_vectorLength <= _count)
-    {
-        _x.at(_vectorLength - 1) = static_cast<double>(_vectorLength - 1);
-        _y.at(_vectorLength - 1) = static_cast<double>(pow(_vectorLength - 1, 2));
     }
 
     notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
