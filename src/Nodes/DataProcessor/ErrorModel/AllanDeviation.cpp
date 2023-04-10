@@ -151,8 +151,8 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         {
             for (size_t j = 0; j < 3; j++)
             {
-                _accelAllanVariance.at(j).at(i) = _accelAllanSum.at(j).at(i) / (pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
-                _gyroAllanVariance.at(j).at(i) = _gyroAllanSum.at(j).at(i) / (pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
+                _accelAllanVariance.at(j).at(i) = _accelAllanSum.at(j).at(i) / (2 * pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
+                _gyroAllanVariance.at(j).at(i) = _gyroAllanSum.at(j).at(i) / (2 * pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
             }
         }
     }
