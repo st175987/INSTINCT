@@ -57,13 +57,34 @@ std::string NAV::AllanDeviation::category()
 
 void NAV::AllanDeviation::guiConfig()
 {
-    if (ImPlot::BeginPlot("Line Plot"))
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+    if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
     {
-        ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-        ImPlot::PlotLine("avar x", _averagingFactors.data(), _accelAllanVariance.at(0).data(), static_cast<int>(_averagingFactors.size()));
-        ImPlot::PlotLine("avar y", _averagingFactors.data(), _accelAllanVariance.at(1).data(), static_cast<int>(_averagingFactors.size()));
-        ImPlot::PlotLine("avar z", _averagingFactors.data(), _accelAllanVariance.at(2).data(), static_cast<int>(_averagingFactors.size()));
-        ImPlot::EndPlot();
+        if (ImGui::BeginTabItem("Accelerometer"))
+        {
+            if (ImPlot::BeginPlot("Line Plot"))
+            {
+                ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+                ImPlot::PlotLine("avar x", _averagingFactors.data(), _accelAllanVariance.at(0).data(), static_cast<int>(_averagingFactors.size()));
+                ImPlot::PlotLine("avar y", _averagingFactors.data(), _accelAllanVariance.at(1).data(), static_cast<int>(_averagingFactors.size()));
+                ImPlot::PlotLine("avar z", _averagingFactors.data(), _accelAllanVariance.at(2).data(), static_cast<int>(_averagingFactors.size()));
+                ImPlot::EndPlot();
+            }
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Gyroscope"))
+        {
+            if (ImPlot::BeginPlot("Line Plot"))
+            {
+                ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+                ImPlot::PlotLine("avar x", _averagingFactors.data(), _gyroAllanVariance.at(0).data(), static_cast<int>(_averagingFactors.size()));
+                ImPlot::PlotLine("avar y", _averagingFactors.data(), _gyroAllanVariance.at(1).data(), static_cast<int>(_averagingFactors.size()));
+                ImPlot::PlotLine("avar z", _averagingFactors.data(), _gyroAllanVariance.at(2).data(), static_cast<int>(_averagingFactors.size()));
+                ImPlot::EndPlot();
+            }
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
 }
 
