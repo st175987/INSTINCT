@@ -113,6 +113,24 @@ bool NAV::AllanDeviation::initialize()
 {
     LOG_TRACE("{}: called", nameId());
 
+    _accelCumSum = std::vector<Eigen::Vector3d>{ Eigen::Vector3d::Zero() };
+    _gyroCumSum = std::vector<Eigen::Vector3d>{ Eigen::Vector3d::Zero() };
+
+    _averagingFactors = std::vector<double>{};
+    _observationCount = std::vector<double>{};
+
+    _accelAllanSum = std::array<std::vector<double>, 3>{};
+    _gyroAllanSum = std::array<std::vector<double>, 3>{};
+
+    _accelAllanVariance = std::array<std::vector<double>, 3>{};
+    _gyroAllanVariance = std::array<std::vector<double>, 3>{};
+
+    _cumSumLength = 1;
+
+    _nextAveragingFactorExponent = 1;
+
+    _nextAveragingFactor = 1;
+
     return true;
 }
 
