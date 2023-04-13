@@ -144,7 +144,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     auto obs = std::static_pointer_cast<const ImuObs>(queue.extract_front());
 
     _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
-    _gyroCumSum.push_back(_accelCumSum.back() + obs->gyroUncompXYZ.value());
+    _gyroCumSum.push_back(_gyroCumSum.back() + obs->gyroUncompXYZ.value());
     _cumSumLength = static_cast<unsigned int>(_accelCumSum.size());
 
     if (_cumSumLength - 1 == _nextAveragingFactor * 2)
