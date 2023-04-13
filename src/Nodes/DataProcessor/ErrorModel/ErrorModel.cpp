@@ -103,29 +103,135 @@ void NAV::ErrorModel::guiConfig()
     float itemWidth = 470 * gui::NodeEditorApplication::windowFontRatio();
     float unitWidth = 180 * gui::NodeEditorApplication::windowFontRatio();
 
-    ImGui::TextUnformatted("Offsets:");
-    ImGui::Indent();
     if (outputPins.at(OUTPUT_PORT_INDEX_FLOW).dataIdentifier.front() == ImuObs::type())
     {
-        if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
-                                               _imuAccelerometerBias_p.data(), reinterpret_cast<int*>(&_imuAccelerometerBiasUnit), "m/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
-                                               "%.2e", ImGuiInputTextFlags_CharsScientific))
+        if (ImGui::BeginTabBar("MyTabBar", ImGuiTabBarFlags_None))
         {
-            LOG_DEBUG("{}: _imuAccelerometerBias_p changed to {}", nameId(), _imuAccelerometerBias_p.transpose());
-            LOG_DEBUG("{}: _imuAccelerometerBiasUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerBiasUnit));
-            flow::ApplyChanges();
-        }
-        if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
-                                               _imuGyroscopeBias_p.data(), reinterpret_cast<int*>(&_imuGyroscopeBiasUnit), "rad/s\0deg/s\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
-                                               "%.2e", ImGuiInputTextFlags_CharsScientific))
-        {
-            LOG_DEBUG("{}: _imuGyroscopeBias_p changed to {}", nameId(), _imuGyroscopeBias_p.transpose());
-            LOG_DEBUG("{}: _imuGyroscopeBiasUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeBiasUnit));
-            flow::ApplyChanges();
+            if (ImGui::BeginTabItem("Accelerometer"))
+            {
+                ImGui::TextUnformatted("Offsets:");
+                ImGui::Indent();
+
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
+                                                       _imuAccelerometerBias_p.data(), reinterpret_cast<int*>(&_imuAccelerometerBiasUnit), "m/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuAccelerometerBias_p changed to {}", nameId(), _imuAccelerometerBias_p.transpose());
+                    LOG_DEBUG("{}: _imuAccelerometerBiasUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerBiasUnit));
+                    flow::ApplyChanges();
+                }
+
+                ImGui::Unindent();
+                ImGui::TextUnformatted("Measurement noise:");
+                ImGui::Indent();
+
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer Noise ({})##{}",
+                                                                   _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
+                                                                                                                                  : "Variance",
+                                                                   size_t(id))
+                                                           .c_str(),
+                                                       itemWidth, unitWidth,
+                                                       _imuAccelerometerNoise.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuAccelerometerNoise changed to {}", nameId(), _imuAccelerometerNoise.transpose());
+                    LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
+                    flow::ApplyChanges();
+                }
+                float currentCursorX = ImGui::GetCursorPosX();
+                if (ImGui::Checkbox(fmt::format("##_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime))
+                {
+                    LOG_DEBUG("{}: _imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime changed to {}", nameId(), _imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime);
+                    flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                if (!_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime)
+                {
+                    ImGui::BeginDisabled();
+                }
+                ImGui::SetNextItemWidth(itemWidth - (ImGui::GetCursorPosX() - currentCursorX) + ImGui::GetStyle().ItemSpacing.x);
+                if (ImGui::SliderUInt(fmt::format("Accelerometer Noise Seed##{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.seed, 0, std::numeric_limits<uint32_t>::max() / 2, "%lu", ImGuiSliderFlags_Logarithmic))
+                {
+                    LOG_DEBUG("{}: _imuAccelerometerRandomNumberGenerator.seed changed to {}", nameId(), _imuAccelerometerRandomNumberGenerator.seed);
+                    flow::ApplyChanges();
+                }
+                if (!_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime)
+                {
+                    ImGui::EndDisabled();
+                }
+                ImGui::Unindent();
+
+                ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Gyroscope"))
+            {
+                ImGui::TextUnformatted("Offsets:");
+                ImGui::Indent();
+
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
+                                                       _imuGyroscopeBias_p.data(), reinterpret_cast<int*>(&_imuGyroscopeBiasUnit), "rad/s\0deg/s\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuGyroscopeBias_p changed to {}", nameId(), _imuGyroscopeBias_p.transpose());
+                    LOG_DEBUG("{}: _imuGyroscopeBiasUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeBiasUnit));
+                    flow::ApplyChanges();
+                }
+
+                ImGui::Unindent();
+                ImGui::TextUnformatted("Measurement noise:");
+                ImGui::Indent();
+
+                float currentCursorX = ImGui::GetCursorPosX();
+
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Noise ({})##{}",
+                                                                   _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
+                                                                           || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
+                                                                       ? "Standard deviation"
+                                                                       : "Variance",
+                                                                   size_t(id))
+                                                           .c_str(),
+                                                       itemWidth, unitWidth,
+                                                       _imuGyroscopeNoise.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuGyroscopeNoise changed to {}", nameId(), _imuGyroscopeNoise.transpose());
+                    LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
+                    flow::ApplyChanges();
+                }
+                currentCursorX = ImGui::GetCursorPosX();
+                if (ImGui::Checkbox(fmt::format("##_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime{}", size_t(id)).c_str(), &_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime))
+                {
+                    LOG_DEBUG("{}: _imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime changed to {}", nameId(), _imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime);
+                    flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                if (!_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime)
+                {
+                    ImGui::BeginDisabled();
+                }
+                ImGui::SetNextItemWidth(itemWidth - (ImGui::GetCursorPosX() - currentCursorX) + ImGui::GetStyle().ItemSpacing.x);
+                if (ImGui::SliderUInt(fmt::format("Gyroscope Noise Seed##{}", size_t(id)).c_str(), &(_imuGyroscopeRandomNumberGenerator.seed), 0, std::numeric_limits<uint32_t>::max() / 2UL, "%lu", ImGuiSliderFlags_Logarithmic))
+                {
+                    LOG_DEBUG("{}: _imuGyroscopeRandomNumberGenerator.seed changed to {}", nameId(), _imuGyroscopeRandomNumberGenerator.seed);
+                    flow::ApplyChanges();
+                }
+                if (!_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime)
+                {
+                    ImGui::EndDisabled();
+                }
+                ImGui::Unindent();
+
+                ImGui::EndTabItem();
+            }
+
+            ImGui::EndTabBar();
         }
     }
     else if (outputPins.at(OUTPUT_PORT_INDEX_FLOW).dataIdentifier.front() == PosVelAtt::type())
     {
+        ImGui::TextUnformatted("Offsets:");
+        ImGui::Indent();
+
         if (gui::widgets::InputDouble3WithUnit(fmt::format("Position Bias ({})##{}",
                                                            _positionBiasUnit == PositionBiasUnits::meter ? "NED" : "LatLonAlt",
                                                            size_t(id))
@@ -154,91 +260,11 @@ void NAV::ErrorModel::guiConfig()
             LOG_DEBUG("{}: _attitudeBiasUnit changed to {}", nameId(), fmt::underlying(_attitudeBiasUnit));
             flow::ApplyChanges();
         }
-    }
-    ImGui::Unindent();
 
-    ImGui::TextUnformatted("Measurement noise:");
-    ImGui::Indent();
-    if (outputPins.at(OUTPUT_PORT_INDEX_FLOW).dataIdentifier.front() == ImuObs::type())
-    {
-        // #########################################################################################################################################
-        if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer Noise ({})##{}",
-                                                           _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
-                                                                                                                          : "Variance",
-                                                           size_t(id))
-                                                   .c_str(),
-                                               itemWidth, unitWidth,
-                                               _imuAccelerometerNoise.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
-                                               "%.2e", ImGuiInputTextFlags_CharsScientific))
-        {
-            LOG_DEBUG("{}: _imuAccelerometerNoise changed to {}", nameId(), _imuAccelerometerNoise.transpose());
-            LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
-            flow::ApplyChanges();
-        }
-        float currentCursorX = ImGui::GetCursorPosX();
-        if (ImGui::Checkbox(fmt::format("##_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime))
-        {
-            LOG_DEBUG("{}: _imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime changed to {}", nameId(), _imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime);
-            flow::ApplyChanges();
-        }
-        ImGui::SameLine();
-        if (!_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime)
-        {
-            ImGui::BeginDisabled();
-        }
-        ImGui::SetNextItemWidth(itemWidth - (ImGui::GetCursorPosX() - currentCursorX) + ImGui::GetStyle().ItemSpacing.x);
-        if (ImGui::SliderUInt(fmt::format("Accelerometer Noise Seed##{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.seed, 0, std::numeric_limits<uint32_t>::max() / 2, "%lu", ImGuiSliderFlags_Logarithmic))
-        {
-            LOG_DEBUG("{}: _imuAccelerometerRandomNumberGenerator.seed changed to {}", nameId(), _imuAccelerometerRandomNumberGenerator.seed);
-            flow::ApplyChanges();
-        }
-        if (!_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime)
-        {
-            ImGui::EndDisabled();
-        }
+        ImGui::Unindent();
+        ImGui::TextUnformatted("Measurement noise:");
+        ImGui::Indent();
 
-        // #########################################################################################################################################
-
-        if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Noise ({})##{}",
-                                                           _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
-                                                                   || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
-                                                               ? "Standard deviation"
-                                                               : "Variance",
-                                                           size_t(id))
-                                                   .c_str(),
-                                               itemWidth, unitWidth,
-                                               _imuGyroscopeNoise.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
-                                               "%.2e", ImGuiInputTextFlags_CharsScientific))
-        {
-            LOG_DEBUG("{}: _imuGyroscopeNoise changed to {}", nameId(), _imuGyroscopeNoise.transpose());
-            LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
-            flow::ApplyChanges();
-        }
-        currentCursorX = ImGui::GetCursorPosX();
-        if (ImGui::Checkbox(fmt::format("##_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime{}", size_t(id)).c_str(), &_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime))
-        {
-            LOG_DEBUG("{}: _imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime changed to {}", nameId(), _imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime);
-            flow::ApplyChanges();
-        }
-        ImGui::SameLine();
-        if (!_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime)
-        {
-            ImGui::BeginDisabled();
-        }
-        ImGui::SetNextItemWidth(itemWidth - (ImGui::GetCursorPosX() - currentCursorX) + ImGui::GetStyle().ItemSpacing.x);
-        if (ImGui::SliderUInt(fmt::format("Gyroscope Noise Seed##{}", size_t(id)).c_str(), &(_imuGyroscopeRandomNumberGenerator.seed), 0, std::numeric_limits<uint32_t>::max() / 2UL, "%lu", ImGuiSliderFlags_Logarithmic))
-        {
-            LOG_DEBUG("{}: _imuGyroscopeRandomNumberGenerator.seed changed to {}", nameId(), _imuGyroscopeRandomNumberGenerator.seed);
-            flow::ApplyChanges();
-        }
-        if (!_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime)
-        {
-            ImGui::EndDisabled();
-        }
-        // #########################################################################################################################################
-    }
-    else if (outputPins.at(OUTPUT_PORT_INDEX_FLOW).dataIdentifier.front() == PosVelAtt::type())
-    {
         // #########################################################################################################################################
         if (gui::widgets::InputDouble3WithUnit(fmt::format("Position Noise ({})##{}",
                                                            _positionNoiseUnit == PositionNoiseUnits::meter
@@ -354,8 +380,9 @@ void NAV::ErrorModel::guiConfig()
             ImGui::EndDisabled();
         }
         // #########################################################################################################################################
+
+        ImGui::Unindent();
     }
-    ImGui::Unindent();
 }
 
 json NAV::ErrorModel::save() const
