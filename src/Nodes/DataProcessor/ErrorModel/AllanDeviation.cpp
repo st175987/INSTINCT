@@ -64,6 +64,7 @@ void NAV::AllanDeviation::guiConfig()
         {
             if (ImPlot::BeginPlot("Line Plot"))
             {
+                ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
                 ImPlot::PlotLine("avar x", _averagingFactors.data(), _accelAllanVariance.at(0).data(), static_cast<int>(_averagingFactors.size()));
                 ImPlot::PlotLine("avar y", _averagingFactors.data(), _accelAllanVariance.at(1).data(), static_cast<int>(_averagingFactors.size()));
@@ -76,6 +77,7 @@ void NAV::AllanDeviation::guiConfig()
         {
             if (ImPlot::BeginPlot("Line Plot"))
             {
+                ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::SetupAxes("tau", "sigma", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
                 ImPlot::PlotLine("avar x", _averagingFactors.data(), _gyroAllanVariance.at(0).data(), static_cast<int>(_averagingFactors.size()));
                 ImPlot::PlotLine("avar y", _averagingFactors.data(), _gyroAllanVariance.at(1).data(), static_cast<int>(_averagingFactors.size()));
