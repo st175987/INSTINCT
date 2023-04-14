@@ -23,7 +23,7 @@
 
 namespace NAV
 {
-/// @brief Demonstrates the basic GUI functionality of nodes
+/// @brief Computes Allan Deviation of IMU Observations
 class AllanDeviation : public Node
 {
   public:
@@ -83,25 +83,35 @@ class AllanDeviation : public Node
     std::vector<Eigen::Vector3d> _accelCumSum{ Eigen::Vector3d::Zero() };
     std::vector<Eigen::Vector3d> _gyroCumSum{ Eigen::Vector3d::Zero() };
 
-    std::vector<double> _averagingFactors;
-    std::vector<double> _observationCount;
-
-    std::array<std::vector<double>, 3> _accelAllanSum;
-    std::array<std::vector<double>, 3> _gyroAllanSum;
-
-    std::array<std::vector<double>, 3> _accelAllanVariance;
-    std::array<std::vector<double>, 3> _gyroAllanVariance;
-
+    /// temporary variable for computation of Allan Sum
     Eigen::Vector3d _accelTempSum;
     Eigen::Vector3d _gyroTempSum;
 
+    /// Allan Variance precursor
+    std::array<std::vector<double>, 3> _accelAllanSum;
+    std::array<std::vector<double>, 3> _gyroAllanSum;
+
+    /// Allan Variance of accelerometer and gyroscope data
+    std::array<std::vector<double>, 3> _accelAllanVariance;
+    std::array<std::vector<double>, 3> _gyroAllanVariance;
+
+    /// averaging factors used for Allan Variance computation
+    std::vector<double> _averagingFactors;
+
+    /// number of observations
+    std::vector<double> _observationCount;
+
+    /// Length of cumulative Sums
     unsigned int _cumSumLength{ 1 };
 
+    /// number of averaging factors per decade
     double _averagingFactorsPerDecade{ 100 };
 
-    unsigned int _nextAveragingFactorExponent{ 1 };
-
+    /// next averaging factor to be appended to _averagingFactors
     unsigned int _nextAveragingFactor{ 1 };
+
+    /// exponent of next averaging factor
+    unsigned int _nextAveragingFactorExponent{ 1 };
 };
 
 } // namespace NAV

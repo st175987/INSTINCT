@@ -58,7 +58,7 @@ std::string NAV::AllanDeviation::category()
 void NAV::AllanDeviation::guiConfig()
 {
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
-    if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags))
+    if (ImGui::BeginTabBar("AllanDeviationTabBar", tab_bar_flags))
     {
         if (ImGui::BeginTabItem("Accelerometer"))
         {
@@ -145,10 +145,12 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 {
     auto obs = std::static_pointer_cast<const ImuObs>(queue.extract_front());
 
+    // cumulative sums
     _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
     _gyroCumSum.push_back(_gyroCumSum.back() + obs->gyroUncompXYZ.value());
     _cumSumLength = static_cast<unsigned int>(_accelCumSum.size());
 
+    // extending _averagingFactors if necessary
     if (_cumSumLength - 1 == _nextAveragingFactor * 2)
     {
         _averagingFactors.push_back(_nextAveragingFactor);
@@ -161,6 +163,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
             _gyroAllanVariance.at(i).push_back(0);
         }
 
+        // computation of next averaging factor
         while (static_cast<unsigned int>(round(pow(10., static_cast<double>(_nextAveragingFactorExponent) / _averagingFactorsPerDecade))) == _nextAveragingFactor)
         {
             _nextAveragingFactorExponent++;
@@ -169,6 +172,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         _nextAveragingFactor = static_cast<unsigned int>(round(pow(10., static_cast<double>(_nextAveragingFactorExponent) / _averagingFactorsPerDecade)));
     }
 
+    // computation Allan sum
     for (size_t i = 0; i < _averagingFactors.size(); i++)
     {
         _accelTempSum = _accelCumSum.at(_cumSumLength - 1)
@@ -186,6 +190,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         _observationCount.at(i)++;
     }
 
+    // computation of Allan Variance
     if (_cumSumLength % 1000 == 0)
     {
         for (size_t i = 0; i < _averagingFactors.size(); i++)
