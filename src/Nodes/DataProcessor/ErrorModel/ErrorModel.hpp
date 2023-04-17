@@ -102,6 +102,12 @@ class ErrorModel : public Node
     //                                                                 ImuObs
     // #########################################################################################################################################
 
+    // ---------------------------------------------------------------- Time -------------------------------------------------------------------
+
+    InsTime _emptyInsTimeObject;
+    InsTime _previousInsTime;
+    long double _dt = 0;
+
     // --------------------------------------------------------------- Offset ------------------------------------------------------------------
 
     /// Possible units to specify an accelerometer bias with
@@ -141,8 +147,14 @@ class ErrorModel : public Node
     /// Selected unit for the accelerometer noise in the GUI
     ImuAccelerometerNoiseUnits _imuAccelerometerNoiseUnit = ImuAccelerometerNoiseUnits::m_s2;
 
-    /// Noise of the accelerometer (Unit as selected)
+    /// f⁰ Noise of the accelerometer (Unit as selected)
     Eigen::Vector3d _imuAccelerometerNoise = Eigen::Vector3d::Zero();
+
+    /// f⁻² Noise of the accelerometer (Unit as selected)
+    Eigen::Vector3d _imuAccelerometerRedNoise = Eigen::Vector3d::Zero();
+
+    /// f⁻² Noise of the accelerometer (Unit as selected)
+    Eigen::Vector3d _imuAccelerometerRedNoiseTemp = Eigen::Vector3d::Zero();
 
     /// Random number generator for the accelerometer noise
     RandomNumberGenerator _imuAccelerometerRandomNumberGenerator;
@@ -159,8 +171,14 @@ class ErrorModel : public Node
     /// Selected unit for the gyroscope noise in the GUI
     ImuGyroscopeNoiseUnits _imuGyroscopeNoiseUnit = ImuGyroscopeNoiseUnits::rad_s;
 
-    /// Noise of the gyroscope (Unit as selected)
+    /// f⁰ Noise of the gyroscope (Unit as selected)
     Eigen::Vector3d _imuGyroscopeNoise = Eigen::Vector3d::Zero();
+
+    /// f⁻² Noise of the gyroscope (Unit as selected)
+    Eigen::Vector3d _imuGyroscopeRedNoise = Eigen::Vector3d::Zero();
+
+    /// f⁻² Noise of the gyroscope (Unit as selected)
+    Eigen::Vector3d _imuGyroscopeRedNoiseTemp = Eigen::Vector3d::Zero();
 
     /// Random number generator for the gyroscope noise
     RandomNumberGenerator _imuGyroscopeRandomNumberGenerator;
