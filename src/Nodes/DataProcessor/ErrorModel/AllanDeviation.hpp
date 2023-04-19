@@ -79,6 +79,12 @@ class AllanDeviation : public Node
 
     // ------------------------------------------------------------ Algorithm --------------------------------------------------------------
 
+    /// sampling interval
+    double _samplingInterval;
+
+    InsTime _emptyInsTimeObject;
+    InsTime _startingInsTime;
+
     /// Cumulative Sums of accelerometer and gyroscope data
     std::vector<Eigen::Vector3d> _accelCumSum{ Eigen::Vector3d::Zero() };
     std::vector<Eigen::Vector3d> _gyroCumSum{ Eigen::Vector3d::Zero() };
@@ -95,8 +101,16 @@ class AllanDeviation : public Node
     std::array<std::vector<double>, 3> _accelAllanVariance;
     std::array<std::vector<double>, 3> _gyroAllanVariance;
 
+    /// Allan Deviation of accelerometer and gyroscope data
+    std::array<std::vector<double>, 3> _accelAllanDeviation;
+    std::array<std::vector<double>, 3> _gyroAllanDeviation;
+
     /// averaging factors used for Allan Variance computation
     std::vector<double> _averagingFactors;
+
+    /// averaging times
+    std::vector<double> _accelAveragingTimes;
+    std::vector<double> _gyroAveragingTimes;
 
     /// number of observations
     std::vector<double> _observationCount;
