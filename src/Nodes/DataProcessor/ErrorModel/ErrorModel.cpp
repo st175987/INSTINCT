@@ -112,7 +112,7 @@ void NAV::ErrorModel::guiConfig()
                 ImGui::TextUnformatted("Offsets:");
                 ImGui::Indent();
 
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
                                                        _imuAccelerometerBias_p.data(), reinterpret_cast<int*>(&_imuAccelerometerBiasUnit), "m/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
@@ -125,31 +125,56 @@ void NAV::ErrorModel::guiConfig()
                 ImGui::TextUnformatted("Measurement noise:");
                 ImGui::Indent();
 
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer White Noise ({})##{}",
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁰ Noise ({})##{}",
                                                                    _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
                                                                                                                                   : "Variance",
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuAccelerometerNoise.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuAccelerometerWhiteNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
-                    LOG_DEBUG("{}: _imuAccelerometerNoise changed to {}", nameId(), _imuAccelerometerNoise.transpose());
+                    LOG_DEBUG("{}: _imuAccelerometerWhiteNoiseInput changed to {}", nameId(), _imuAccelerometerWhiteNoiseInput.transpose());
                     LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
                     flow::ApplyChanges();
                 }
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Accelerometer Red Noise ({})##{}",
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("S(f)~f⁰ Noise, also called White Noise or Velocity Random Walk\n"
+                                           "Adds normally distributed random numbers\n"
+                                           "with given standard deviation/variance to accelerometer data.");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁻² Noise ({})##{}",
                                                                    _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
                                                                                                                                   : "Variance",
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuAccelerometerRedNoise.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuAccelerometerRedNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
-                    LOG_DEBUG("{}: _imuAccelerometerRedNoise changed to {}", nameId(), _imuAccelerometerRedNoise.transpose());
+                    LOG_DEBUG("{}: _imuAccelerometerRedNoiseInput changed to {}", nameId(), _imuAccelerometerRedNoiseInput.transpose());
                     LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
                     flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("S(f)~f⁻² Noise, also called Red Noise or Rate Random Walk\n"
+                                           "Adds normally distributed random numbers\n"
+                                           "with given standard deviation/variance to variable,\n"
+                                           "adds that variable to accelerometer data.");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
                 }
                 float currentCursorX = ImGui::GetCursorPosX();
                 if (ImGui::Checkbox(fmt::format("##_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.useSeedInsteadOfSystemTime))
@@ -163,7 +188,7 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::BeginDisabled();
                 }
                 ImGui::SetNextItemWidth(itemWidth - (ImGui::GetCursorPosX() - currentCursorX) + ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::SliderUInt(fmt::format("Accelerometer Noise Seed##{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.seed, 0, std::numeric_limits<uint32_t>::max() / 2, "%lu", ImGuiSliderFlags_Logarithmic))
+                if (ImGui::SliderUInt(fmt::format("Noise Seed##{}", size_t(id)).c_str(), &_imuAccelerometerRandomNumberGenerator.seed, 0, std::numeric_limits<uint32_t>::max() / 2, "%lu", ImGuiSliderFlags_Logarithmic))
                 {
                     LOG_DEBUG("{}: _imuAccelerometerRandomNumberGenerator.seed changed to {}", nameId(), _imuAccelerometerRandomNumberGenerator.seed);
                     flow::ApplyChanges();
@@ -181,7 +206,7 @@ void NAV::ErrorModel::guiConfig()
                 ImGui::TextUnformatted("Offsets:");
                 ImGui::Indent();
 
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Bias (platform)##{}", size_t(id)).c_str(), itemWidth, unitWidth,
                                                        _imuGyroscopeBias_p.data(), reinterpret_cast<int*>(&_imuGyroscopeBiasUnit), "rad/s\0deg/s\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
@@ -196,7 +221,7 @@ void NAV::ErrorModel::guiConfig()
 
                 float currentCursorX = ImGui::GetCursorPosX();
 
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Noise ({})##{}",
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁰ Noise ({})##{}",
                                                                    _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
                                                                            || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
                                                                        ? "Standard deviation"
@@ -204,14 +229,26 @@ void NAV::ErrorModel::guiConfig()
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuGyroscopeNoise.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuGyroscopeWhiteNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
-                    LOG_DEBUG("{}: _imuGyroscopeNoise changed to {}", nameId(), _imuGyroscopeNoise.transpose());
+                    LOG_DEBUG("{}: _imuGyroscopeWhiteNoiseInput changed to {}", nameId(), _imuGyroscopeWhiteNoiseInput.transpose());
                     LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
                     flow::ApplyChanges();
                 }
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Gyroscope Red Noise ({})##{}",
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("S(f)~f⁰ Noise, also called White Noise or Angle Random Walk\n"
+                                           "Adds normally distributed random numbers\n"
+                                           "with given standard deviation/variance to gyroscope data.");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁻² Noise ({})##{}",
                                                                    _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
                                                                            || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
                                                                        ? "Standard deviation"
@@ -219,12 +256,25 @@ void NAV::ErrorModel::guiConfig()
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuGyroscopeRedNoise.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuGyroscopeRedNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
-                    LOG_DEBUG("{}: _imuGyroscopeRedNoise changed to {}", nameId(), _imuGyroscopeRedNoise.transpose());
+                    LOG_DEBUG("{}: _imuGyroscopeRedNoiseInput changed to {}", nameId(), _imuGyroscopeRedNoiseInput.transpose());
                     LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
                     flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("S(f)~f⁻² Noise, also called Red Noise or Rate Random Walk\n"
+                                           "Adds normally distributed random numbers\n"
+                                           "with given standard deviation/variance to variable,\n"
+                                           "adds that variable to gyroscope data.");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
                 }
                 currentCursorX = ImGui::GetCursorPosX();
                 if (ImGui::Checkbox(fmt::format("##_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime{}", size_t(id)).c_str(), &_imuGyroscopeRandomNumberGenerator.useSeedInsteadOfSystemTime))
@@ -238,7 +288,7 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::BeginDisabled();
                 }
                 ImGui::SetNextItemWidth(itemWidth - (ImGui::GetCursorPosX() - currentCursorX) + ImGui::GetStyle().ItemSpacing.x);
-                if (ImGui::SliderUInt(fmt::format("Gyroscope Noise Seed##{}", size_t(id)).c_str(), &(_imuGyroscopeRandomNumberGenerator.seed), 0, std::numeric_limits<uint32_t>::max() / 2UL, "%lu", ImGuiSliderFlags_Logarithmic))
+                if (ImGui::SliderUInt(fmt::format("Noise Seed##{}", size_t(id)).c_str(), &(_imuGyroscopeRandomNumberGenerator.seed), 0, std::numeric_limits<uint32_t>::max() / 2UL, "%lu", ImGuiSliderFlags_Logarithmic))
                 {
                     LOG_DEBUG("{}: _imuGyroscopeRandomNumberGenerator.seed changed to {}", nameId(), _imuGyroscopeRandomNumberGenerator.seed);
                     flow::ApplyChanges();
@@ -425,12 +475,12 @@ json NAV::ErrorModel::save() const
     j["imuGyroscopeBias_p"] = _imuGyroscopeBias_p;
 
     j["imuAccelerometerNoiseUnit"] = _imuAccelerometerNoiseUnit;
-    j["imuAccelerometerNoise"] = _imuAccelerometerNoise;
-    j["imuAccelerometerRedNoise"] = _imuAccelerometerRedNoise;
+    j["imuAccelerometerWhiteNoise"] = _imuAccelerometerWhiteNoiseInput;
+    j["imuAccelerometerRedNoise"] = _imuAccelerometerRedNoiseInput;
     j["imuAccelerometerRandomNumberGenerator"] = _imuAccelerometerRandomNumberGenerator;
     j["imuGyroscopeNoiseUnit"] = _imuGyroscopeNoiseUnit;
-    j["imuGyroscopeNoise"] = _imuGyroscopeNoise;
-    j["imuGyroscopeRedNoise"] = _imuGyroscopeRedNoise;
+    j["imuGyroscopeWhiteNoise"] = _imuGyroscopeWhiteNoiseInput;
+    j["imuGyroscopeRedNoise"] = _imuGyroscopeRedNoiseInput;
     j["imuGyroscopeRandomNumberGenerator"] = _imuGyroscopeRandomNumberGenerator;
     // #########################################################################################################################################
     j["positionBiasUnit"] = _positionBiasUnit;
@@ -478,13 +528,13 @@ void NAV::ErrorModel::restore(json const& j)
     {
         j.at("imuAccelerometerNoiseUnit").get_to(_imuAccelerometerNoiseUnit);
     }
-    if (j.contains("imuAccelerometerNoise"))
+    if (j.contains("imuAccelerometerWhiteNoise"))
     {
-        j.at("imuAccelerometerNoise").get_to(_imuAccelerometerNoise);
+        j.at("imuAccelerometerWhiteNoise").get_to(_imuAccelerometerWhiteNoiseInput);
     }
     if (j.contains("imuAccelerometerRedNoise"))
     {
-        j.at("imuAccelerometerRedNoise").get_to(_imuAccelerometerRedNoise);
+        j.at("imuAccelerometerRedNoise").get_to(_imuAccelerometerRedNoiseInput);
     }
     if (j.contains("imuAccelerometerRandomNumberGenerator"))
     {
@@ -494,13 +544,13 @@ void NAV::ErrorModel::restore(json const& j)
     {
         j.at("imuGyroscopeNoiseUnit").get_to(_imuGyroscopeNoiseUnit);
     }
-    if (j.contains("imuGyroscopeNoise"))
+    if (j.contains("imuGyroscopeWhiteNoise"))
     {
-        j.at("imuGyroscopeNoise").get_to(_imuGyroscopeNoise);
+        j.at("imuGyroscopeWhiteNoise").get_to(_imuGyroscopeWhiteNoiseInput);
     }
     if (j.contains("imuGyroscopeRedNoise"))
     {
-        j.at("imuGyroscopeRedNoise").get_to(_imuGyroscopeRedNoise);
+        j.at("imuGyroscopeRedNoise").get_to(_imuGyroscopeRedNoiseInput);
     }
     if (j.contains("imuGyroscopeRandomNumberGenerator"))
     {
@@ -596,11 +646,8 @@ bool NAV::ErrorModel::resetNode()
                                                           : static_cast<uint32_t>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
-    _dt = 0;
-    _previousInsTime = _emptyInsTimeObject;
-
-    _imuAccelerometerRedNoiseTemp = Eigen::Vector3d::Zero();
-    _imuGyroscopeRedNoiseTemp = Eigen::Vector3d::Zero();
+    _imuAccelerometerRedNoise = Eigen::Vector3d::Zero();
+    _imuGyroscopeRedNoise = Eigen::Vector3d::Zero();
 
     return true;
 }
@@ -676,18 +723,6 @@ void NAV::ErrorModel::receiveObs(NAV::InputPin::NodeDataQueue& queue, size_t /* 
 
 void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
 {
-    if (_previousInsTime.empty())
-    {
-        _previousInsTime = imuObs->insTime;
-    }
-    else
-    {
-        _dt = (imuObs->insTime - _previousInsTime).count();
-        _previousInsTime = imuObs->insTime;
-    }
-
-    // #########################################################################################################################################
-
     // Accelerometer Bias in platform frame coordinates [m/s^2]
     Eigen::Vector3d accelerometerBias_p = Eigen::Vector3d::Zero();
     switch (_imuAccelerometerBiasUnit)
@@ -719,12 +754,12 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
     switch (_imuAccelerometerNoiseUnit)
     {
     case ImuAccelerometerNoiseUnits::m_s2:
-        accelerometerNoiseStd = _imuAccelerometerNoise;
-        accelerometerRedNoiseStd = _imuAccelerometerRedNoise;
+        accelerometerNoiseStd = _imuAccelerometerWhiteNoiseInput;
+        accelerometerRedNoiseStd = _imuAccelerometerRedNoiseInput;
         break;
     case ImuAccelerometerNoiseUnits::m2_s4:
-        accelerometerNoiseStd = _imuAccelerometerNoise.cwiseSqrt();
-        accelerometerRedNoiseStd = _imuAccelerometerRedNoise.cwiseSqrt();
+        accelerometerNoiseStd = _imuAccelerometerWhiteNoiseInput.cwiseSqrt();
+        accelerometerRedNoiseStd = _imuAccelerometerRedNoiseInput.cwiseSqrt();
         break;
     }
     LOG_DATA("{}: accelerometerNoiseStd = {} [m/s^2]", nameId(), accelerometerNoiseStd.transpose());
@@ -736,20 +771,20 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
     switch (_imuGyroscopeNoiseUnit)
     {
     case ImuGyroscopeNoiseUnits::rad_s:
-        gyroscopeNoiseStd = _imuGyroscopeNoise;
-        gyroscopeRedNoiseStd = _imuGyroscopeRedNoise;
+        gyroscopeNoiseStd = _imuGyroscopeWhiteNoiseInput;
+        gyroscopeRedNoiseStd = _imuGyroscopeRedNoiseInput;
         break;
     case ImuGyroscopeNoiseUnits::deg_s:
-        gyroscopeNoiseStd = deg2rad(_imuGyroscopeNoise);
-        gyroscopeRedNoiseStd = deg2rad(_imuGyroscopeRedNoise);
+        gyroscopeNoiseStd = deg2rad(_imuGyroscopeWhiteNoiseInput);
+        gyroscopeRedNoiseStd = deg2rad(_imuGyroscopeRedNoiseInput);
         break;
     case ImuGyroscopeNoiseUnits::rad2_s2:
-        gyroscopeNoiseStd = _imuGyroscopeNoise.cwiseSqrt();
-        gyroscopeRedNoiseStd = _imuGyroscopeRedNoise.cwiseSqrt();
+        gyroscopeNoiseStd = _imuGyroscopeWhiteNoiseInput.cwiseSqrt();
+        gyroscopeRedNoiseStd = _imuGyroscopeRedNoiseInput.cwiseSqrt();
         break;
     case ImuGyroscopeNoiseUnits::deg2_s2:
-        gyroscopeNoiseStd = deg2rad(_imuGyroscopeNoise.cwiseSqrt());
-        gyroscopeRedNoiseStd = deg2rad(_imuGyroscopeRedNoise.cwiseSqrt());
+        gyroscopeNoiseStd = deg2rad(_imuGyroscopeWhiteNoiseInput.cwiseSqrt());
+        gyroscopeRedNoiseStd = deg2rad(_imuGyroscopeRedNoiseInput.cwiseSqrt());
         break;
     }
     LOG_DATA("{}: gyroscopeNoiseStd = {} [rad/s]", nameId(), gyroscopeNoiseStd.transpose());
@@ -757,26 +792,24 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
 
     // #########################################################################################################################################
 
-    _imuAccelerometerRedNoiseTemp += sqrt(_dt)
-                                     * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
-                                                        std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
-                                                        std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
+    _imuAccelerometerRedNoise += Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
+                                                  std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
+                                                  std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
 
-    _imuGyroscopeRedNoiseTemp += sqrt(_dt)
-                                 * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
-                                                    std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
-                                                    std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };
+    _imuGyroscopeRedNoise += Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
+                                              std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
+                                              std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };
 
     imuObs->accelUncompXYZ.value() += accelerometerBias_p
                                       + Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                          std::normal_distribution<double>{ 0.0, accelerometerNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                          std::normal_distribution<double>{ 0.0, accelerometerNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) }
-                                      + _imuAccelerometerRedNoiseTemp;
+                                      + _imuAccelerometerRedNoise;
     imuObs->gyroUncompXYZ.value() += gyroscopeBias_p
                                      + Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                         std::normal_distribution<double>{ 0.0, gyroscopeNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                         std::normal_distribution<double>{ 0.0, gyroscopeNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) }
-                                     + _imuGyroscopeRedNoiseTemp;
+                                     + _imuGyroscopeRedNoise;
 
     invokeCallbacks(OUTPUT_PORT_INDEX_FLOW, imuObs);
 }
