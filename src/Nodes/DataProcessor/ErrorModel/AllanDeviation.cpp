@@ -66,9 +66,9 @@ void NAV::AllanDeviation::guiConfig()
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::SetupAxes("τ [s]", "σ [m/s²]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-                ImPlot::PlotLine("x", _accelAveragingTimes.data(), _accelAllanDeviation.at(0).data(), static_cast<int>(_accelAveragingTimes.size()));
-                ImPlot::PlotLine("y", _accelAveragingTimes.data(), _accelAllanDeviation.at(1).data(), static_cast<int>(_accelAveragingTimes.size()));
-                ImPlot::PlotLine("z", _accelAveragingTimes.data(), _accelAllanDeviation.at(2).data(), static_cast<int>(_accelAveragingTimes.size()));
+                ImPlot::PlotLine("x", _averagingTimes.data(), _accelAllanDeviation.at(0).data(), static_cast<int>(_averagingTimes.size()));
+                ImPlot::PlotLine("y", _averagingTimes.data(), _accelAllanDeviation.at(1).data(), static_cast<int>(_averagingTimes.size()));
+                ImPlot::PlotLine("z", _averagingTimes.data(), _accelAllanDeviation.at(2).data(), static_cast<int>(_averagingTimes.size()));
                 ImPlot::EndPlot();
             }
             ImGui::EndTabItem();
@@ -79,9 +79,9 @@ void NAV::AllanDeviation::guiConfig()
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-                ImPlot::PlotLine("x", _gyroAveragingTimes.data(), _gyroAllanDeviation.at(0).data(), static_cast<int>(_gyroAveragingTimes.size()));
-                ImPlot::PlotLine("y", _gyroAveragingTimes.data(), _gyroAllanDeviation.at(1).data(), static_cast<int>(_gyroAveragingTimes.size()));
-                ImPlot::PlotLine("z", _gyroAveragingTimes.data(), _gyroAllanDeviation.at(2).data(), static_cast<int>(_gyroAveragingTimes.size()));
+                ImPlot::PlotLine("x", _averagingTimes.data(), _gyroAllanDeviation.at(0).data(), static_cast<int>(_averagingTimes.size()));
+                ImPlot::PlotLine("y", _averagingTimes.data(), _gyroAllanDeviation.at(1).data(), static_cast<int>(_averagingTimes.size()));
+                ImPlot::PlotLine("z", _averagingTimes.data(), _gyroAllanDeviation.at(2).data(), static_cast<int>(_averagingTimes.size()));
                 ImPlot::EndPlot();
             }
             ImGui::EndTabItem();
@@ -115,14 +115,13 @@ bool NAV::AllanDeviation::initialize()
 {
     LOG_TRACE("{}: called", nameId());
 
-    _startingInsTime = _emptyInsTimeObject;
+    _startingInsTime.reset();
 
     _accelCumSum = std::vector<Eigen::Vector3d>{ Eigen::Vector3d::Zero() };
     _gyroCumSum = std::vector<Eigen::Vector3d>{ Eigen::Vector3d::Zero() };
 
     _averagingFactors = std::vector<double>{};
-    _accelAveragingTimes = std::vector<double>{};
-    _gyroAveragingTimes = std::vector<double>{};
+    _averagingTimes = std::vector<double>{};
     _observationCount = std::vector<double>{};
 
     _accelAllanSum = std::array<std::vector<double>, 3>{};
@@ -153,7 +152,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     auto obs = std::static_pointer_cast<const ImuObs>(queue.extract_front());
 
     // save InsTime of first imuObs for sampling interval computation
-    if (_startingInsTime == _emptyInsTimeObject)
+    if (_startingInsTime.empty())
     {
         _startingInsTime = obs->insTime;
     }
@@ -206,12 +205,10 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     {
         _samplingInterval = static_cast<double>((obs->insTime - _startingInsTime).count()) / (_cumSumLength - 1.);
 
-        _accelAveragingTimes.resize(_averagingFactors.size(), 0.);
-        _gyroAveragingTimes.resize(_averagingFactors.size(), 0.);
+        _averagingTimes.resize(_averagingFactors.size(), 0.);
         for (size_t i = 0; i < _averagingFactors.size(); i++)
         {
-            _accelAveragingTimes.at(i) = _averagingFactors.at(i) * _samplingInterval;
-            _gyroAveragingTimes.at(i) = _averagingFactors.at(i) * _samplingInterval;
+            _averagingTimes.at(i) = _averagingFactors.at(i) * _samplingInterval;
         }
 
         for (size_t j = 0; j < 3; j++)

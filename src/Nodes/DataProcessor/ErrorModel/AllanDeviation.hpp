@@ -82,7 +82,6 @@ class AllanDeviation : public Node
     /// sampling interval
     double _samplingInterval;
 
-    InsTime _emptyInsTimeObject;
     InsTime _startingInsTime;
 
     /// Cumulative Sums of accelerometer and gyroscope data
@@ -109,8 +108,7 @@ class AllanDeviation : public Node
     std::vector<double> _averagingFactors;
 
     /// averaging times
-    std::vector<double> _accelAveragingTimes;
-    std::vector<double> _gyroAveragingTimes;
+    std::vector<double> _averagingTimes;
 
     /// number of observations
     std::vector<double> _observationCount;
