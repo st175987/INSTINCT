@@ -170,9 +170,50 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::BeginTooltip();
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
                     ImGui::TextUnformatted("S(f)~f⁻² Noise, also called Red Noise or Rate Random Walk\n"
-                                           "Adds normally distributed random numbers\n"
-                                           "with given standard deviation/variance to variable,\n"
-                                           "adds that variable to accelerometer data.");
+                                           "The variance at time t equals (t-t₀)σ².");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise ({})##{}",
+                                                                   _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
+                                                                                                                                  : "Variance",
+                                                                   size_t(id))
+                                                           .c_str(),
+                                                       itemWidth, unitWidth,
+                                                       _imuAccelerometerCorrelatedNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuAccelerometerCorrelatedNoiseInput changed to {}", nameId(), _imuAccelerometerCorrelatedNoiseInput.transpose());
+                    LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
+                    flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("Standard deviation/Variance of Correlated Noise\n"
+                                            "Also called 1st order Gauss-Markov process.");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise Correlation Time ##{}", size_t(id)).c_str(),
+                                                       itemWidth, unitWidth, _imuAccelerometerCorrelatedNoiseCorrelationTime.data(), reinterpret_cast<int*>(&_imuAccelerometerCorrelationTimeUnit), "s\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuAccelerometerCorrelatedNoiseCorrelationTime changed to {}", nameId(), _imuAccelerometerCorrelatedNoiseCorrelationTime.transpose());
+                    LOG_DEBUG("{}: _imuAccelerometerCorrelationTimeUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerCorrelationTimeUnit));
+                    flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("Correlation time of Correlated Noise\n"
+                                           "Also called 1st order Gauss-Markov process.");
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
@@ -270,9 +311,52 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::BeginTooltip();
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
                     ImGui::TextUnformatted("S(f)~f⁻² Noise, also called Red Noise or Rate Random Walk\n"
-                                           "Adds normally distributed random numbers\n"
-                                           "with given standard deviation/variance to variable,\n"
-                                           "adds that variable to gyroscope data.");
+                                           "The variance at time t equals (t-t₀)σ².");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise ({})##{}",
+                                                                   _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
+                                                                           || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
+                                                                       ? "Standard deviation"
+                                                                       : "Variance",
+                                                                   size_t(id))
+                                                           .c_str(),
+                                                       itemWidth, unitWidth,
+                                                       _imuGyroscopeCorrelatedNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuGyroscopeCorrelatedNoiseInput changed to {}", nameId(), _imuGyroscopeCorrelatedNoiseInput.transpose());
+                    LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
+                    flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("Standard deviation/Variance of Correlated Noise\n"
+                                           "Also called 1st order Gauss-Markov process.");
+                    ImGui::PopTextWrapPos();
+                    ImGui::EndTooltip();
+                }
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise Correlation Time ##{}", size_t(id)).c_str(),
+                                                       itemWidth, unitWidth, _imuGyroscopeCorrelatedNoiseCorrelationTime.data(), reinterpret_cast<int*>(&_imuGyroscopeCorrelationTimeUnit), "s\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       "%.2e", ImGuiInputTextFlags_CharsScientific))
+                {
+                    LOG_DEBUG("{}: _imuGyroscopeCorrelatedNoiseCorrelationTime changed to {}", nameId(), _imuGyroscopeCorrelatedNoiseCorrelationTime.transpose());
+                    LOG_DEBUG("{}: _imuGyroscopeCorrelationTimeUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeCorrelationTimeUnit));
+                    flow::ApplyChanges();
+                }
+                ImGui::SameLine();
+                ImGui::TextDisabled("(?)");
+                if (ImGui::IsItemHovered())
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                    ImGui::TextUnformatted("Correlation time of Correlated Noise\n"
+                                           "Also called 1st order Gauss-Markov process.");
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
@@ -477,10 +561,16 @@ json NAV::ErrorModel::save() const
     j["imuAccelerometerNoiseUnit"] = _imuAccelerometerNoiseUnit;
     j["imuAccelerometerWhiteNoise"] = _imuAccelerometerWhiteNoiseInput;
     j["imuAccelerometerRedNoise"] = _imuAccelerometerRedNoiseInput;
+    j["imuAccelerometerCorrelatedNoise"] = _imuAccelerometerCorrelatedNoiseInput;
+    j["imuAccelerometerCorrelatedNoiseCorrelationTime"] = _imuAccelerometerCorrelatedNoiseCorrelationTime;
+    j["imuAccelerometerCorrelationTimeUnit"] = _imuAccelerometerCorrelationTimeUnit;
     j["imuAccelerometerRandomNumberGenerator"] = _imuAccelerometerRandomNumberGenerator;
     j["imuGyroscopeNoiseUnit"] = _imuGyroscopeNoiseUnit;
     j["imuGyroscopeWhiteNoise"] = _imuGyroscopeWhiteNoiseInput;
     j["imuGyroscopeRedNoise"] = _imuGyroscopeRedNoiseInput;
+    j["imuGyroscopeCorrelatedNoise"] = _imuGyroscopeCorrelatedNoiseInput;
+    j["imuGyroscopeCorrelatedNoiseCorrelationTime"] = _imuGyroscopeCorrelatedNoiseCorrelationTime;
+    j["imuGyroscopeCorrelationTimeUnit"] = _imuGyroscopeCorrelationTimeUnit;
     j["imuGyroscopeRandomNumberGenerator"] = _imuGyroscopeRandomNumberGenerator;
     // #########################################################################################################################################
     j["positionBiasUnit"] = _positionBiasUnit;
@@ -536,6 +626,18 @@ void NAV::ErrorModel::restore(json const& j)
     {
         j.at("imuAccelerometerRedNoise").get_to(_imuAccelerometerRedNoiseInput);
     }
+    if (j.contains("imuAccelerometerCorrelatedNoise"))
+    {
+        j.at("imuAccelerometerCorrelatedNoise").get_to(_imuAccelerometerCorrelatedNoiseInput);
+    }
+    if (j.contains("imuAccelerometerCorrelatedNoiseCorrelationTime"))
+    {
+        j.at("imuAccelerometerCorrelatedNoiseCorrelationTime").get_to(_imuAccelerometerCorrelatedNoiseCorrelationTime);
+    }
+    if (j.contains("imuAccelerometerCorrelationTimeUnit"))
+    {
+        j.at("imuAccelerometerCorrelationTimeUnit").get_to(_imuAccelerometerCorrelationTimeUnit);
+    }
     if (j.contains("imuAccelerometerRandomNumberGenerator"))
     {
         j.at("imuAccelerometerRandomNumberGenerator").get_to(_imuAccelerometerRandomNumberGenerator);
@@ -551,6 +653,18 @@ void NAV::ErrorModel::restore(json const& j)
     if (j.contains("imuGyroscopeRedNoise"))
     {
         j.at("imuGyroscopeRedNoise").get_to(_imuGyroscopeRedNoiseInput);
+    }
+    if (j.contains("imuGyroscopeCorrelatedNoise"))
+    {
+        j.at("imuGyroscopeCorrelatedNoise").get_to(_imuGyroscopeCorrelatedNoiseInput);
+    }
+    if (j.contains("imuGyroscopeCorrelatedNoiseCorrelationTime"))
+    {
+        j.at("imuGyroscopeCorrelatedNoiseCorrelationTime").get_to(_imuGyroscopeCorrelatedNoiseCorrelationTime);
+    }
+    if (j.contains("imuGyroscopeCorrelationTimeUnit"))
+    {
+        j.at("imuGyroscopeCorrelationTimeUnit").get_to(_imuGyroscopeCorrelationTimeUnit);
     }
     if (j.contains("imuGyroscopeRandomNumberGenerator"))
     {
@@ -646,6 +760,9 @@ bool NAV::ErrorModel::resetNode()
                                                           : static_cast<uint32_t>(std::chrono::system_clock::now().time_since_epoch().count()));
     }
 
+    _dt = 0;
+    _previousInsTime.reset();
+
     _imuAccelerometerRedNoise = Eigen::Vector3d::Zero();
     _imuGyroscopeRedNoise = Eigen::Vector3d::Zero();
 
@@ -723,6 +840,18 @@ void NAV::ErrorModel::receiveObs(NAV::InputPin::NodeDataQueue& queue, size_t /* 
 
 void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
 {
+    if (_previousInsTime.empty())
+    {
+        _previousInsTime = imuObs->insTime;
+    }
+    else
+    {
+        _dt = (imuObs->insTime - _previousInsTime).count();
+        _previousInsTime = imuObs->insTime;
+    }
+
+    // #########################################################################################################################################
+
     // Accelerometer Bias in platform frame coordinates [m/s^2]
     Eigen::Vector3d accelerometerBias_p = Eigen::Vector3d::Zero();
     switch (_imuAccelerometerBiasUnit)
@@ -751,65 +880,100 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
     // Accelerometer Noise standard deviation in platform frame coordinates [m/s^2]
     Eigen::Vector3d accelerometerNoiseStd = Eigen::Vector3d::Zero();
     Eigen::Vector3d accelerometerRedNoiseStd = Eigen::Vector3d::Zero();
+    Eigen::Vector3d accelerometerCorrelatedNoiseStd = Eigen::Vector3d::Zero();
     switch (_imuAccelerometerNoiseUnit)
     {
     case ImuAccelerometerNoiseUnits::m_s2:
         accelerometerNoiseStd = _imuAccelerometerWhiteNoiseInput;
         accelerometerRedNoiseStd = _imuAccelerometerRedNoiseInput;
+        accelerometerCorrelatedNoiseStd = _imuAccelerometerCorrelatedNoiseInput;
         break;
     case ImuAccelerometerNoiseUnits::m2_s4:
         accelerometerNoiseStd = _imuAccelerometerWhiteNoiseInput.cwiseSqrt();
         accelerometerRedNoiseStd = _imuAccelerometerRedNoiseInput.cwiseSqrt();
+        accelerometerCorrelatedNoiseStd = _imuAccelerometerCorrelatedNoiseInput.cwiseSqrt();
         break;
     }
     LOG_DATA("{}: accelerometerNoiseStd = {} [m/s^2]", nameId(), accelerometerNoiseStd.transpose());
     LOG_DATA("{}: accelerometerRedNoiseStd = {} [m/s^2]", nameId(), accelerometerRedNoiseStd.transpose());
+    LOG_DATA("{}: accelerometerCorrelatedNoiseStd = {} [m/s^2]", nameId(), accelerometerCorrelatedNoiseStd.transpose());
+
+    LOG_DATA("{}: accelerometerCorrelatedNoiseCorrelationTime = {} [s]", nameId(), _imuAccelerometerCorrelatedNoiseCorrelationTime.transpose());
+
+    Eigen::Array3d accelerometerCorrelatedNoiseMultiplicationFactor = (-_dt / _imuAccelerometerCorrelatedNoiseCorrelationTime.array()).exp();
 
     // Gyroscope Noise standard deviation in platform frame coordinates [rad/s]
     Eigen::Vector3d gyroscopeNoiseStd = Eigen::Vector3d::Zero();
     Eigen::Vector3d gyroscopeRedNoiseStd = Eigen::Vector3d::Zero();
+    Eigen::Vector3d gyroscopeCorrelatedNoiseStd = Eigen::Vector3d::Zero();
     switch (_imuGyroscopeNoiseUnit)
     {
     case ImuGyroscopeNoiseUnits::rad_s:
         gyroscopeNoiseStd = _imuGyroscopeWhiteNoiseInput;
         gyroscopeRedNoiseStd = _imuGyroscopeRedNoiseInput;
+        gyroscopeCorrelatedNoiseStd = _imuGyroscopeCorrelatedNoiseInput;
         break;
     case ImuGyroscopeNoiseUnits::deg_s:
         gyroscopeNoiseStd = deg2rad(_imuGyroscopeWhiteNoiseInput);
         gyroscopeRedNoiseStd = deg2rad(_imuGyroscopeRedNoiseInput);
+        gyroscopeCorrelatedNoiseStd = deg2rad(_imuGyroscopeCorrelatedNoiseInput);
         break;
     case ImuGyroscopeNoiseUnits::rad2_s2:
         gyroscopeNoiseStd = _imuGyroscopeWhiteNoiseInput.cwiseSqrt();
         gyroscopeRedNoiseStd = _imuGyroscopeRedNoiseInput.cwiseSqrt();
+        gyroscopeCorrelatedNoiseStd = _imuGyroscopeCorrelatedNoiseInput.cwiseSqrt();
         break;
     case ImuGyroscopeNoiseUnits::deg2_s2:
         gyroscopeNoiseStd = deg2rad(_imuGyroscopeWhiteNoiseInput.cwiseSqrt());
         gyroscopeRedNoiseStd = deg2rad(_imuGyroscopeRedNoiseInput.cwiseSqrt());
+        gyroscopeCorrelatedNoiseStd = deg2rad(_imuGyroscopeCorrelatedNoiseInput.cwiseSqrt());
         break;
     }
     LOG_DATA("{}: gyroscopeNoiseStd = {} [rad/s]", nameId(), gyroscopeNoiseStd.transpose());
     LOG_DATA("{}: gyroscopeRedNoiseStd = {} [rad/s]", nameId(), gyroscopeRedNoiseStd.transpose());
+    LOG_DATA("{}: gyroscopeCorrelatedNoiseStd = {} [rad/s]", nameId(), gyroscopeCorrelatedNoiseStd.transpose());
+
+    LOG_DATA("{}: gyroscopeCorrelatedNoiseCorrelationTIme = {} [rad/s]", nameId(), _imuGyroscopeCorrelatedNoiseCorrelationTime.transpose());
+
+    Eigen::Array3d gyroscopeCorrelatedNoiseMultiplicationFactor = (-_dt / _imuGyroscopeCorrelatedNoiseCorrelationTime.array()).exp();
 
     // #########################################################################################################################################
 
-    _imuAccelerometerRedNoise += Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
-                                                  std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
-                                                  std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
+    _imuAccelerometerRedNoise += sqrt(_dt)
+                                 * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
+                                                    std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
+                                                    std::normal_distribution<double>{ 0.0, accelerometerRedNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
 
-    _imuGyroscopeRedNoise += Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
-                                              std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
-                                              std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };
+    _imuGyroscopeRedNoise += sqrt(_dt)
+                             * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
+                                                std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
+                                                std::normal_distribution<double>{ 0.0, gyroscopeRedNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };
+
+    _imuAccelerometerCorrelatedNoise = (_imuAccelerometerCorrelatedNoise.array() * accelerometerCorrelatedNoiseMultiplicationFactor).matrix()
+                                       + sqrt(_dt)
+                                             * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerCorrelatedNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
+                                                                std::normal_distribution<double>{ 0.0, accelerometerCorrelatedNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
+                                                                std::normal_distribution<double>{ 0.0, accelerometerCorrelatedNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
+
+    _imuGyroscopeCorrelatedNoise = (_imuGyroscopeCorrelatedNoise.array() * gyroscopeCorrelatedNoiseMultiplicationFactor).matrix()
+                                   + sqrt(_dt)
+                                         * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeCorrelatedNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
+                                                            std::normal_distribution<double>{ 0.0, gyroscopeCorrelatedNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
+                                                            std::normal_distribution<double>{ 0.0, gyroscopeCorrelatedNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };
 
     imuObs->accelUncompXYZ.value() += accelerometerBias_p
                                       + Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                          std::normal_distribution<double>{ 0.0, accelerometerNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                          std::normal_distribution<double>{ 0.0, accelerometerNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) }
-                                      + _imuAccelerometerRedNoise;
+                                      + _imuAccelerometerRedNoise
+                                      + _imuAccelerometerCorrelatedNoise;
+
     imuObs->gyroUncompXYZ.value() += gyroscopeBias_p
                                      + Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                         std::normal_distribution<double>{ 0.0, gyroscopeNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                         std::normal_distribution<double>{ 0.0, gyroscopeNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) }
-                                     + _imuGyroscopeRedNoise;
+                                     + _imuGyroscopeRedNoise
+                                     + _imuGyroscopeCorrelatedNoise;
 
     invokeCallbacks(OUTPUT_PORT_INDEX_FLOW, imuObs);
 }
