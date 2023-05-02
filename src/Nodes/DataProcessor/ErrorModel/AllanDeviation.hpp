@@ -114,7 +114,7 @@ class AllanDeviation : public Node
     std::vector<double> _observationCount;
 
     /// Length of cumulative Sums
-    unsigned int _cumSumLength{ 1 };
+    unsigned int _imuObsCount{ 0 };
 
     /// number of averaging factors per decade
     double _averagingFactorsPerDecade{ 100 };
@@ -124,6 +124,13 @@ class AllanDeviation : public Node
 
     /// exponent of next averaging factor
     unsigned int _nextAveragingFactorExponent{ 1 };
+
+    /// multiplication factor for simple confidence
+    std::vector<double> _confidenceMultiplicationFactor;
+
+    /// Confidence of Allan Deviation of accelerometer and gyroscope data
+    std::array<std::array<std::vector<double>, 2>, 3> _accelAllanDeviationConfidence;
+    std::array<std::array<std::vector<double>, 2>, 3> _gyroAllanDeviationConfidence;
 };
 
 } // namespace NAV

@@ -27,7 +27,7 @@ NAV::AllanDeviation::AllanDeviation()
     LOG_TRACE("{}: called", name);
 
     _hasConfig = true;
-    // _lockConfigDuringRun = false;
+    _lockConfigDuringRun = false;
     _guiConfigDefaultWindowSize = { 630, 410 };
 
     nm::CreateOutputPin(this, "Object", Pin::Type::Object, { "AdevOutput" }, &_valueObject);
@@ -57,6 +57,8 @@ std::string NAV::AllanDeviation::category()
 
 void NAV::AllanDeviation::guiConfig()
 {
+    const std::array<char[2], 3> legendEntries{ "x", "y", "z" };
+
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("AllanDeviationTabBar", tab_bar_flags))
     {
@@ -66,9 +68,12 @@ void NAV::AllanDeviation::guiConfig()
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::SetupAxes("τ [s]", "σ [m/s²]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-                ImPlot::PlotLine("x", _averagingTimes.data(), _accelAllanDeviation.at(0).data(), static_cast<int>(_averagingTimes.size()));
-                ImPlot::PlotLine("y", _averagingTimes.data(), _accelAllanDeviation.at(1).data(), static_cast<int>(_averagingTimes.size()));
-                ImPlot::PlotLine("z", _averagingTimes.data(), _accelAllanDeviation.at(2).data(), static_cast<int>(_averagingTimes.size()));
+                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+                for (size_t i = 0; i < 3; i++)
+                {
+                    ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidence.at(i).at(0).data(), _accelAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                    ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                }
                 ImPlot::EndPlot();
             }
             ImGui::EndTabItem();
@@ -78,10 +83,13 @@ void NAV::AllanDeviation::guiConfig()
             if (ImPlot::BeginPlot("Allan Deviation of Gyroscope"))
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
+                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
                 ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-                ImPlot::PlotLine("x", _averagingTimes.data(), _gyroAllanDeviation.at(0).data(), static_cast<int>(_averagingTimes.size()));
-                ImPlot::PlotLine("y", _averagingTimes.data(), _gyroAllanDeviation.at(1).data(), static_cast<int>(_averagingTimes.size()));
-                ImPlot::PlotLine("z", _averagingTimes.data(), _gyroAllanDeviation.at(2).data(), static_cast<int>(_averagingTimes.size()));
+                for (size_t i = 0; i < 3; i++)
+                {
+                    ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidence.at(i).at(0).data(), _gyroAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                    ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                }
                 ImPlot::EndPlot();
             }
             ImGui::EndTabItem();
@@ -133,7 +141,10 @@ bool NAV::AllanDeviation::initialize()
     _accelAllanDeviation = std::array<std::vector<double>, 3>{};
     _gyroAllanDeviation = std::array<std::vector<double>, 3>{};
 
-    _cumSumLength = 1;
+    _accelAllanDeviationConfidence = std::array<std::array<std::vector<double>, 2>, 3>{};
+    _gyroAllanDeviationConfidence = std::array<std::array<std::vector<double>, 2>, 3>{};
+
+    _imuObsCount = 0;
 
     _nextAveragingFactorExponent = 1;
 
@@ -160,10 +171,10 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     // cumulative sums
     _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
     _gyroCumSum.push_back(_gyroCumSum.back() + obs->gyroUncompXYZ.value());
-    _cumSumLength = static_cast<unsigned int>(_accelCumSum.size());
+    _imuObsCount++;
 
     // extending _averagingFactors if necessary
-    if (_cumSumLength - 1 == _nextAveragingFactor * 2)
+    if (_imuObsCount == _nextAveragingFactor * 2)
     {
         _averagingFactors.push_back(_nextAveragingFactor);
         _observationCount.push_back(0);
@@ -185,12 +196,12 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     // computation Allan sum
     for (size_t i = 0; i < _averagingFactors.size(); i++)
     {
-        _accelTempSum = _accelCumSum.at(_cumSumLength - 1)
-                        - 2 * _accelCumSum.at(_cumSumLength - 1 - static_cast<unsigned int>(_averagingFactors.at(i)))
-                        + _accelCumSum.at(_cumSumLength - 1 - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
-        _gyroTempSum = _gyroCumSum.at(_cumSumLength - 1)
-                       - 2 * _gyroCumSum.at(_cumSumLength - 1 - static_cast<unsigned int>(_averagingFactors.at(i)))
-                       + _gyroCumSum.at(_cumSumLength - 1 - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
+        _accelTempSum = _accelCumSum.at(_imuObsCount)
+                        - 2 * _accelCumSum.at(_imuObsCount - static_cast<unsigned int>(_averagingFactors.at(i)))
+                        + _accelCumSum.at(_imuObsCount - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
+        _gyroTempSum = _gyroCumSum.at(_imuObsCount)
+                       - 2 * _gyroCumSum.at(_imuObsCount - static_cast<unsigned int>(_averagingFactors.at(i)))
+                       + _gyroCumSum.at(_imuObsCount - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
 
         for (size_t j = 0; j < 3; j++)
         {
@@ -201,14 +212,16 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     }
 
     // computation of Allan Variance and Deviation
-    if (_cumSumLength % 1 == 0)
+    if (_imuObsCount % 1 == 0)
     {
-        _samplingInterval = static_cast<double>((obs->insTime - _startingInsTime).count()) / (_cumSumLength - 1.);
+        _samplingInterval = static_cast<double>((obs->insTime - _startingInsTime).count()) / _imuObsCount;
 
         _averagingTimes.resize(_averagingFactors.size(), 0.);
+        _confidenceMultiplicationFactor.resize(_averagingFactors.size(), 0.);
         for (size_t i = 0; i < _averagingFactors.size(); i++)
         {
             _averagingTimes.at(i) = _averagingFactors.at(i) * _samplingInterval;
+            _confidenceMultiplicationFactor.at(i) = sqrt(0.5 / (_imuObsCount / _averagingFactors.at(i) - 1));
         }
 
         for (size_t j = 0; j < 3; j++)
@@ -218,6 +231,12 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
             _accelAllanDeviation.at(j).resize(_averagingFactors.size(), 0.);
             _gyroAllanDeviation.at(j).resize(_averagingFactors.size(), 0.);
 
+            for (size_t k = 0; k < 2; k++)
+            {
+                _accelAllanDeviationConfidence.at(j).at(k).resize(_averagingFactors.size(), 0.);
+                _gyroAllanDeviationConfidence.at(j).at(k).resize(_averagingFactors.size(), 0.);
+            }
+
             for (size_t i = 0; i < _averagingFactors.size(); i++)
             {
                 _accelAllanVariance.at(j).at(i) = _accelAllanSum.at(j).at(i) / (2 * pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
@@ -225,6 +244,11 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 
                 _accelAllanDeviation.at(j).at(i) = sqrt(_accelAllanVariance.at(j).at(i));
                 _gyroAllanDeviation.at(j).at(i) = sqrt(_gyroAllanVariance.at(j).at(i));
+
+                _accelAllanDeviationConfidence.at(j).at(0).at(i) = _accelAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
+                _accelAllanDeviationConfidence.at(j).at(1).at(i) = _accelAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
+                _gyroAllanDeviationConfidence.at(j).at(0).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
+                _gyroAllanDeviationConfidence.at(j).at(1).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
             }
         }
     }
