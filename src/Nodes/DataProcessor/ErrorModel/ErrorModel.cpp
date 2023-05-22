@@ -900,7 +900,11 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
 
     LOG_DATA("{}: accelerometerCorrelatedNoiseCorrelationTime = {} [s]", nameId(), _imuAccelerometerCorrelatedNoiseCorrelationTime.transpose());
 
-    Eigen::Array3d accelerometerCorrelatedNoiseMultiplicationFactor = (-_dt / _imuAccelerometerCorrelatedNoiseCorrelationTime.array()).exp();
+    Eigen::Array3d accelerometerCorrelatedNoiseMultiplicationFactor;
+    for (Eigen::Index i = 0; i < 3; i++)
+    {
+        accelerometerCorrelatedNoiseMultiplicationFactor(i) = _imuAccelerometerCorrelatedNoiseCorrelationTime(i) == 0.0 ? 0.0 : static_cast<double>(std::exp(-_dt / std::fabs(_imuAccelerometerCorrelatedNoiseCorrelationTime(i))));
+    }
 
     // Gyroscope Noise standard deviation in platform frame coordinates [rad/s]
     Eigen::Vector3d gyroscopeNoiseStd = Eigen::Vector3d::Zero();
@@ -935,7 +939,11 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
 
     LOG_DATA("{}: gyroscopeCorrelatedNoiseCorrelationTIme = {} [rad/s]", nameId(), _imuGyroscopeCorrelatedNoiseCorrelationTime.transpose());
 
-    Eigen::Array3d gyroscopeCorrelatedNoiseMultiplicationFactor = (-_dt / _imuGyroscopeCorrelatedNoiseCorrelationTime.array()).exp();
+    Eigen::Array3d gyroscopeCorrelatedNoiseMultiplicationFactor;
+    for (Eigen::Index i = 0; i < 3; i++)
+    {
+        gyroscopeCorrelatedNoiseMultiplicationFactor(i) = _imuGyroscopeCorrelatedNoiseCorrelationTime(i) == 0.0 ? 0.0 : static_cast<double>(std::exp(-_dt / std::fabs(_imuGyroscopeCorrelatedNoiseCorrelationTime(i))));
+    }
 
     // #########################################################################################################################################
 
