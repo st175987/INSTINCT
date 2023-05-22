@@ -131,6 +131,8 @@ class AllanDeviation : public Node
     /// Confidence of Allan Deviation of accelerometer and gyroscope data
     std::array<std::array<std::vector<double>, 2>, 3> _accelAllanDeviationConfidence;
     std::array<std::array<std::vector<double>, 2>, 3> _gyroAllanDeviationConfidence;
+
+    bool _displayConfidence = false;
 };
 
 } // namespace NAV

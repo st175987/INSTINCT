@@ -71,7 +71,10 @@ void NAV::AllanDeviation::guiConfig()
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
                 for (size_t i = 0; i < 3; i++)
                 {
-                    ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidence.at(i).at(0).data(), _accelAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                    if (_displayConfidence & !_averagingTimes.empty())
+                    {
+                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidence.at(i).at(0).data(), _accelAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                    }
                     ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
                 }
                 ImPlot::EndPlot();
@@ -87,7 +90,10 @@ void NAV::AllanDeviation::guiConfig()
                 ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
                 for (size_t i = 0; i < 3; i++)
                 {
-                    ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidence.at(i).at(0).data(), _gyroAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                    if (_displayConfidence & !_averagingTimes.empty())
+                    {
+                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidence.at(i).at(0).data(), _gyroAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                    }
                     ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
                 }
                 ImPlot::EndPlot();
@@ -95,6 +101,7 @@ void NAV::AllanDeviation::guiConfig()
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
+        ImGui::Checkbox("Display Confidence Intervals", &_displayConfidence);
     }
 }
 
