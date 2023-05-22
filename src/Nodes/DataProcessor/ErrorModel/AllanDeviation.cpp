@@ -59,6 +59,9 @@ void NAV::AllanDeviation::guiConfig()
 {
     const std::array<char[2], 3> legendEntries{ "x", "y", "z" };
 
+    static bool displayConfidence = false;
+    static float confidenceFillAlpha = 0.4f;
+
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("AllanDeviationTabBar", tab_bar_flags))
     {
@@ -68,10 +71,10 @@ void NAV::AllanDeviation::guiConfig()
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::SetupAxes("τ [s]", "σ [m/s²]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
-                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
                 for (size_t i = 0; i < 3; i++)
                 {
-                    if (_displayConfidence & !_averagingTimes.empty())
+                    if (displayConfidence & !_averagingTimes.empty())
                     {
                         ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidence.at(i).at(0).data(), _accelAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
@@ -86,11 +89,11 @@ void NAV::AllanDeviation::guiConfig()
             if (ImPlot::BeginPlot("Allan Deviation of Gyroscope"))
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
-                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
+                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
                 ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
                 for (size_t i = 0; i < 3; i++)
                 {
-                    if (_displayConfidence & !_averagingTimes.empty())
+                    if (displayConfidence & !_averagingTimes.empty())
                     {
                         ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidence.at(i).at(0).data(), _gyroAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
@@ -101,7 +104,12 @@ void NAV::AllanDeviation::guiConfig()
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
-        ImGui::Checkbox("Display Confidence Intervals", &_displayConfidence);
+        ImGui::Checkbox("Display Confidence Intervals", &displayConfidence);
+        if (!displayConfidence)
+            ImGui::BeginDisabled();
+        ImGui::SliderFloat("Confidence Alpha Channel", &confidenceFillAlpha, 0.0f, 1.0f, "%.2f");
+        if (!displayConfidence)
+            ImGui::EndDisabled();
     }
 }
 
