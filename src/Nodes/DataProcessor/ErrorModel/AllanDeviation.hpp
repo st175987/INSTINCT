@@ -79,6 +79,8 @@ class AllanDeviation : public Node
 
     // ------------------------------------------------------------ Algorithm --------------------------------------------------------------
 
+    void computeSlopes();
+
     /// sampling interval
     double _samplingInterval;
 
@@ -104,16 +106,23 @@ class AllanDeviation : public Node
     std::array<std::vector<double>, 3> _accelAllanDeviation;
     std::array<std::vector<double>, 3> _gyroAllanDeviation;
 
-    /// averaging factors used for Allan Variance computation
+    /// Slope of Allan Variance of accelerometer and gyroscope data
+    std::array<std::vector<double>, 3> _accelSlope;
+    std::array<std::vector<double>, 3> _gyroSlope;
+
+    /// averaging factors (n) used for Allan Variance computation
     std::vector<double> _averagingFactors;
 
-    /// averaging times
+    /// averaging times (τ)
     std::vector<double> _averagingTimes;
 
-    /// number of observations
+    /// number of averaging factors
+    unsigned int _averagingFactorCount{ 0 };
+
+    /// number of observations for each τ
     std::vector<double> _observationCount;
 
-    /// Length of cumulative Sums
+    /// number of IMU observations / length of cumulative sums
     unsigned int _imuObsCount{ 0 };
 
     /// number of averaging factors per decade
