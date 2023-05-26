@@ -220,6 +220,14 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 {
     auto obs = std::static_pointer_cast<const ImuObs>(queue.extract_front());
 
+    // bool lastMessage = false;
+    if (queue.empty()
+        && inputPins[INPUT_PORT_INDEX_IMU_OBS].isPinLinked()
+        && inputPins[INPUT_PORT_INDEX_IMU_OBS].link.getConnectedPin()->mode == OutputPin::Mode::REAL_TIME)
+    {
+        // lastMessage = true;
+    }
+
     // save InsTime of first imuObs for sampling interval computation
     if (_startingInsTime.empty())
     {
