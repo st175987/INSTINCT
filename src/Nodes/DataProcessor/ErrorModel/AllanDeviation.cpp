@@ -72,7 +72,9 @@ void NAV::AllanDeviation::guiConfig()
             if (ImPlot::BeginPlot("Allan Deviation of Accelerometer"))
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
-                ImPlot::SetupAxes("τ [s]", "σ [m/s²]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxes("τ [s]", "σ [m/s²]", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+                ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
                 for (size_t i = 0; i < 3; i++)
                 {
@@ -89,8 +91,9 @@ void NAV::AllanDeviation::guiConfig()
                 if (ImPlot::BeginPlot("Slopes of Allen Deviation"))
                 {
                     ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
-                    ImPlot::SetupAxis(ImAxis_X1, "τ [s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+                    ImPlot::SetupAxis(ImAxis_X1, "τ [s]", ImPlotAxisFlags_AutoFit);
                     ImPlot::SetupAxis(ImAxis_Y1, "µ [ ]", ImPlotAxisFlags_Lock);
+                    ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                     ImPlot::SetupAxisLimits(ImAxis_Y1, -2.5, 2.5);
                     ImPlot::SetupAxisTicks(ImAxis_Y1, slopeTicks, 5, NULL, false);
                     for (size_t i = 0; i < 3; i++)
@@ -110,7 +113,9 @@ void NAV::AllanDeviation::guiConfig()
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
-                ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+                ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                 for (size_t i = 0; i < 3; i++)
                 {
                     if (displayConfidence & !_averagingTimes.empty())
@@ -126,8 +131,9 @@ void NAV::AllanDeviation::guiConfig()
                 if (ImPlot::BeginPlot("Slopes of Allen Deviation"))
                 {
                     ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
-                    ImPlot::SetupAxis(ImAxis_X1, "τ [s]", ImPlotAxisFlags_LogScale + ImPlotAxisFlags_AutoFit);
+                    ImPlot::SetupAxis(ImAxis_X1, "τ [s]", ImPlotAxisFlags_AutoFit);
                     ImPlot::SetupAxis(ImAxis_Y1, "µ [ ]", ImPlotAxisFlags_Lock);
+                    ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                     ImPlot::SetupAxisLimits(ImAxis_Y1, -2.5, 2.5);
                     ImPlot::SetupAxisTicks(ImAxis_Y1, slopeTicks, 5, NULL, false);
                     for (size_t i = 0; i < 3; i++)
