@@ -159,8 +159,8 @@ class ErrorModel : public Node
     Eigen::Vector3d _imuAccelerometerWhiteNoiseInput = Eigen::Vector3d::Zero(); // User input (Unit as selected)
 
     /// f⁻² Noise (Rate Random Walk) of the accelerometer
-    Eigen::Vector3d _imuAccelerometerRedNoiseInput = Eigen::Vector3d::Zero(); // User input(Unit as selected)
-    Eigen::Vector3d _imuAccelerometerRedNoise = Eigen::Vector3d::Zero();      // Actual Noise
+    Eigen::Vector3d _imuAccelerometerRandomWalkInput = Eigen::Vector3d::Zero(); // User input(Unit as selected)
+    Eigen::Vector3d _imuAccelerometerRandomWalk = Eigen::Vector3d::Zero();      // Actual Noise
 
     /// 1st Order Gauss-Markov Noise of the accelerometer
     Eigen::Vector3d _imuAccelerometerCorrelatedNoiseInput = Eigen::Vector3d::Zero();           // User input (Unit as selected)
@@ -195,8 +195,8 @@ class ErrorModel : public Node
     Eigen::Vector3d _imuGyroscopeWhiteNoiseInput = Eigen::Vector3d::Zero(); // User input (Unit as selected)
 
     /// f⁻² Noise (Rate Random Walk) of the gyroscope
-    Eigen::Vector3d _imuGyroscopeRedNoiseInput = Eigen::Vector3d::Zero(); // User input(Unit as selected)
-    Eigen::Vector3d _imuGyroscopeRedNoise = Eigen::Vector3d::Zero();      // Actual Noise
+    Eigen::Vector3d _imuGyroscopeRandomWalkInput = Eigen::Vector3d::Zero(); // User input(Unit as selected)
+    Eigen::Vector3d _imuGyroscopeRandomWalk = Eigen::Vector3d::Zero();      // Actual Noise
 
     /// 1st Order Gauss-Markov Noise of the gyroscope
     Eigen::Vector3d _imuGyroscopeCorrelatedNoiseInput = Eigen::Vector3d::Zero();           // User input (Unit as selected)
