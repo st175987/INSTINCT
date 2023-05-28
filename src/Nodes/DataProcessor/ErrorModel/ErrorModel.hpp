@@ -163,9 +163,9 @@ class ErrorModel : public Node
     Eigen::Vector3d _imuAccelerometerRedNoise = Eigen::Vector3d::Zero();      // Actual Noise
 
     /// 1st Order Gauss-Markov Noise of the accelerometer
-    Eigen::Vector3d _imuAccelerometerCorrelatedNoiseInput;           // User input (Unit as selected)
-    Eigen::Vector3d _imuAccelerometerCorrelatedNoiseCorrelationTime; // Correlation time
-    Eigen::Vector3d _imuAccelerometerCorrelatedNoise;                // Actual Noise
+    Eigen::Vector3d _imuAccelerometerCorrelatedNoiseInput = Eigen::Vector3d::Zero();           // User input (Unit as selected)
+    Eigen::Vector3d _imuAccelerometerCorrelatedNoiseCorrelationTime = Eigen::Vector3d::Zero(); // Correlation time
+    Eigen::Vector3d _imuAccelerometerCorrelatedNoise = Eigen::Vector3d::Zero();                // Actual Noise
 
     /// Random number generator for the accelerometer noise
     RandomNumberGenerator _imuAccelerometerRandomNumberGenerator;
@@ -199,9 +199,9 @@ class ErrorModel : public Node
     Eigen::Vector3d _imuGyroscopeRedNoise = Eigen::Vector3d::Zero();      // Actual Noise
 
     /// 1st Order Gauss-Markov Noise of the gyroscope
-    Eigen::Vector3d _imuGyroscopeCorrelatedNoiseInput;           // User input (Unit as selected)
-    Eigen::Vector3d _imuGyroscopeCorrelatedNoiseCorrelationTime; // Correlation time
-    Eigen::Vector3d _imuGyroscopeCorrelatedNoise;                // Actual Noise
+    Eigen::Vector3d _imuGyroscopeCorrelatedNoiseInput = Eigen::Vector3d::Zero();           // User input (Unit as selected)
+    Eigen::Vector3d _imuGyroscopeCorrelatedNoiseCorrelationTime = Eigen::Vector3d::Zero(); // Correlation time
+    Eigen::Vector3d _imuGyroscopeCorrelatedNoise = Eigen::Vector3d::Zero();                // Actual Noise
 
     /// Random number generator for the gyroscope noise
     RandomNumberGenerator _imuGyroscopeRandomNumberGenerator;

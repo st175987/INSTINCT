@@ -194,7 +194,7 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::BeginTooltip();
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
                     ImGui::TextUnformatted("Standard deviation/Variance of Correlated Noise\n"
-                                            "Also called 1st order Gauss-Markov process.");
+                                           "Also called 1st order Gauss-Markov process.");
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
@@ -765,6 +765,9 @@ bool NAV::ErrorModel::resetNode()
 
     _imuAccelerometerRedNoise = Eigen::Vector3d::Zero();
     _imuGyroscopeRedNoise = Eigen::Vector3d::Zero();
+
+    _imuAccelerometerCorrelatedNoise = Eigen::Vector3d::Zero();
+    _imuGyroscopeCorrelatedNoise = Eigen::Vector3d::Zero();
 
     return true;
 }
