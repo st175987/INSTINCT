@@ -154,6 +154,7 @@ void NAV::AllanDeviation::guiConfig()
         ImGui::SliderFloat("Confidence Alpha Channel", &confidenceFillAlpha, 0.0f, 1.0f, "%.2f");
         if (!displayConfidence)
             ImGui::EndDisabled();
+        ImGui::Checkbox("Compute Allan Deviation last", &_updateLast);
     }
 }
 
@@ -226,12 +227,12 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 {
     auto obs = std::static_pointer_cast<const ImuObs>(queue.extract_front());
 
-    // bool lastMessage = false;
+    bool lastMessage = false;
     if (queue.empty()
         && inputPins[INPUT_PORT_INDEX_IMU_OBS].isPinLinked()
         && inputPins[INPUT_PORT_INDEX_IMU_OBS].link.getConnectedPin()->mode == OutputPin::Mode::REAL_TIME)
     {
-        // lastMessage = true;
+        lastMessage = true;
     }
 
     // save InsTime of first imuObs for sampling interval computation
@@ -285,10 +286,9 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     }
 
     // computation of Allan Variance and Deviation
-    if (_imuObsCount % 1 == 0)
+    if (_updateLast ? lastMessage : _imuObsCount % 1 == 0)
     {
         _samplingInterval = static_cast<double>((obs->insTime - _startingInsTime).count()) / _imuObsCount;
-
         _averagingTimes.resize(_averagingFactorCount, 0.);
         _confidenceMultiplicationFactor.resize(_averagingFactorCount, 0.);
         for (size_t i = 0; i < _averagingFactorCount; i++)
@@ -324,6 +324,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
                 _gyroAllanDeviationConfidence.at(j).at(1).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
             }
         }
+
         computeSlopes();
         estimateNoiseParameters();
     }
@@ -331,7 +332,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
 }
 
-void ::NAV::AllanDeviation::computeSlopes()
+void NAV::AllanDeviation::computeSlopes()
 {
     unsigned long lo, hi;
     double divisor;
