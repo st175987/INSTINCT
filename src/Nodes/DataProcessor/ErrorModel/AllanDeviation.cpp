@@ -325,6 +325,7 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
             }
         }
         computeSlopes();
+        estimateNoiseParameters();
     }
 
     notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
@@ -353,5 +354,17 @@ void ::NAV::AllanDeviation::computeSlopes()
             _accelSlope.at(j).at(i) = log(_accelAllanVariance.at(j).at(hi) / _accelAllanVariance.at(j).at(lo)) / divisor;
             _gyroSlope.at(j).at(i) = log(_gyroAllanVariance.at(j).at(hi) / _gyroAllanVariance.at(j).at(lo)) / divisor;
         }
+    }
+}
+
+void NAV::AllanDeviation::estimateNoiseParameters()
+{
+    Eigen::Map<Eigen::VectorXd> taus(_averagingTimes.data(), static_cast<long>(_averagingFactorCount));
+    for (size_t i = 0; i < 1; i++)
+    {
+        Eigen::Map<Eigen::VectorXd> accelAvar(_accelAllanVariance.at(0).data(), static_cast<long>(_averagingFactorCount));
+        Eigen::Map<Eigen::VectorXd> accelSlope(_accelSlope.at(0).data(), static_cast<long>(_averagingFactorCount));
+
+        Eigen::Array<bool, Eigen::Dynamic, 1> maskN = (accelSlope.array() > -1.5 && accelSlope.array() < -0.5);
     }
 }

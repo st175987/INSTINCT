@@ -81,6 +81,8 @@ class AllanDeviation : public Node
 
     void computeSlopes();
 
+    void estimateNoiseParameters();
+
     /// sampling interval
     double _samplingInterval;
 
