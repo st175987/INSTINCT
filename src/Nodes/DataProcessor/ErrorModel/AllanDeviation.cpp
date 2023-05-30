@@ -80,16 +80,16 @@ void NAV::AllanDeviation::guiConfig()
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
-                for (size_t i = 0; i < 3; i++)
+                for (size_t d = 0; d < 3; d++)
                 {
                     if (displayConfidence & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidenceIntervals.at(i).at(0).data(), _accelAllanDeviationConfidenceIntervals.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotShaded(legendEntries.at(d), _averagingTimes.data(), _allanDeviationConfidenceIntervals.at(0).at(d).at(0).data(), _allanDeviationConfidenceIntervals.at(0).at(d).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
-                    ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                    ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _allanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     if (displayEstimation & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelEstimatedAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     }
                 }
                 ImPlot::EndPlot();
@@ -104,9 +104,9 @@ void NAV::AllanDeviation::guiConfig()
                     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                     ImPlot::SetupAxisLimits(ImAxis_Y1, -2.5, 2.5);
                     ImPlot::SetupAxisTicks(ImAxis_Y1, slopeTicks, 5, NULL, false);
-                    for (size_t i = 0; i < 3; i++)
+                    for (size_t d = 0; d < 3; d++)
                     {
-                        ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelSlope.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _slope.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     }
                     ImPlot::EndPlot();
                 }
@@ -124,13 +124,17 @@ void NAV::AllanDeviation::guiConfig()
                 ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                for (size_t i = 0; i < 3; i++)
+                for (size_t d = 0; d < 3; d++)
                 {
                     if (displayConfidence & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidenceIntervals.at(i).at(0).data(), _gyroAllanDeviationConfidenceIntervals.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotShaded(legendEntries.at(d), _averagingTimes.data(), _allanDeviationConfidenceIntervals.at(1).at(d).at(0).data(), _allanDeviationConfidenceIntervals.at(1).at(d).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
-                    ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                    ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _allanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
+                    if (displayEstimation & !_averagingTimes.empty())
+                    {
+                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
+                    }
                 }
                 ImPlot::EndPlot();
             }
@@ -144,9 +148,9 @@ void NAV::AllanDeviation::guiConfig()
                     ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                     ImPlot::SetupAxisLimits(ImAxis_Y1, -2.5, 2.5);
                     ImPlot::SetupAxisTicks(ImAxis_Y1, slopeTicks, 5, NULL, false);
-                    for (size_t i = 0; i < 3; i++)
+                    for (size_t d = 0; d < 3; d++)
                     {
-                        ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _gyroSlope.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _slope.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     }
                     ImPlot::EndPlot();
                 }
@@ -194,27 +198,21 @@ bool NAV::AllanDeviation::initialize()
 
     _startingInsTime.reset();
 
-    _accelCumSum = std::vector<Eigen::Vector3d>{ Eigen::Vector3d::Zero() };
-    _gyroCumSum = std::vector<Eigen::Vector3d>{ Eigen::Vector3d::Zero() };
+    _cumSum = std::array<std::vector<Eigen::Vector3d>, 2>{ { { Eigen::Vector3d::Zero() }, { Eigen::Vector3d::Zero() } } };
 
     _averagingFactors = std::vector<double>{};
     _averagingTimes = std::vector<double>{};
     _observationCount = std::vector<double>{};
 
-    _accelAllanSum = std::array<std::vector<double>, 3>{};
-    _gyroAllanSum = std::array<std::vector<double>, 3>{};
+    _allanSum = std::array<std::array<std::vector<double>, 3>, 2>{};
 
-    _accelAllanVariance = std::array<std::vector<double>, 3>{};
-    _gyroAllanVariance = std::array<std::vector<double>, 3>{};
+    _allanVariance = std::array<std::array<std::vector<double>, 3>, 2>{};
 
-    _accelAllanDeviation = std::array<std::vector<double>, 3>{};
-    _gyroAllanDeviation = std::array<std::vector<double>, 3>{};
+    _allanDeviation = std::array<std::array<std::vector<double>, 3>, 2>{};
 
-    _accelSlope = std::array<std::vector<double>, 3>{};
-    _gyroSlope = std::array<std::vector<double>, 3>{};
+    _slope = std::array<std::array<std::vector<double>, 3>, 2>{};
 
-    _accelAllanDeviationConfidenceIntervals = std::array<std::array<std::vector<double>, 2>, 3>{};
-    _gyroAllanDeviationConfidenceIntervals = std::array<std::array<std::vector<double>, 2>, 3>{};
+    _allanDeviationConfidenceIntervals = std::array<std::array<std::array<std::vector<double>, 2>, 3>, 2>{};
 
     _imuObsCount = 0;
 
@@ -224,9 +222,9 @@ bool NAV::AllanDeviation::initialize()
 
     _nextAveragingFactor = 1;
 
-    _accel_S_N = std::array<double, 3>{};
+    _S_N = std::array<std::array<double, 3>, 2>{};
 
-    _accelEstimatedAllanDeviation = std::array<std::vector<double>, 3>{};
+    _estimatedAllanDeviation = std::array<std::array<std::vector<double>, 3>, 2>{};
 
     return true;
 }
@@ -254,10 +252,9 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         _startingInsTime = obs->insTime;
     }
 
-    // cumulative sums
-    _accelCumSum.push_back(_accelCumSum.back() + obs->accelUncompXYZ.value());
-    _gyroCumSum.push_back(_gyroCumSum.back() + obs->gyroUncompXYZ.value());
     _imuObsCount++;
+    _cumSum.at(0).push_back(_cumSum.at(0).back() + obs->accelUncompXYZ.value());
+    _cumSum.at(1).push_back(_cumSum.at(1).back() + obs->gyroUncompXYZ.value());
 
     // extending _averagingFactors if necessary
     if (_imuObsCount == _nextAveragingFactor * 2)
@@ -265,10 +262,13 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         _averagingFactors.push_back(_nextAveragingFactor);
         _averagingFactorCount += 1;
         _observationCount.push_back(0);
-        for (size_t i = 0; i < 3; i++)
+
+        for (size_t s = 0; s < 2; s++)
         {
-            _accelAllanSum.at(i).push_back(0);
-            _gyroAllanSum.at(i).push_back(0);
+            for (size_t d = 0; d < 3; d++)
+            {
+                _allanSum.at(s).at(d).push_back(0);
+            }
         }
 
         // computation of next averaging factor
@@ -281,21 +281,20 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
     }
 
     // computation Allan sum
-    for (size_t i = 0; i < _averagingFactorCount; i++)
+    for (size_t k = 0; k < _averagingFactorCount; k++)
     {
-        _accelTempSum = _accelCumSum.at(_imuObsCount)
-                        - 2 * _accelCumSum.at(_imuObsCount - static_cast<unsigned int>(_averagingFactors.at(i)))
-                        + _accelCumSum.at(_imuObsCount - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
-        _gyroTempSum = _gyroCumSum.at(_imuObsCount)
-                       - 2 * _gyroCumSum.at(_imuObsCount - static_cast<unsigned int>(_averagingFactors.at(i)))
-                       + _gyroCumSum.at(_imuObsCount - 2 * static_cast<unsigned int>(_averagingFactors.at(i)));
-
-        for (size_t j = 0; j < 3; j++)
+        for (size_t s = 0; s < 2; s++)
         {
-            _accelAllanSum.at(j).at(i) += pow(_accelTempSum(static_cast<long>(j)), 2);
-            _gyroAllanSum.at(j).at(i) += pow(_gyroTempSum(static_cast<long>(j)), 2);
+            Eigen::Vector3d tempSum = _cumSum.at(s).at(_imuObsCount)
+                                      - 2 * _cumSum.at(s).at(_imuObsCount - static_cast<unsigned int>(_averagingFactors.at(k)))
+                                      + _cumSum.at(s).at(_imuObsCount - 2 * static_cast<unsigned int>(_averagingFactors.at(k)));
+
+            for (size_t d = 0; d < 3; d++)
+            {
+                _allanSum.at(s).at(d).at(k) += pow(tempSum(static_cast<long>(d)), 2);
+            }
         }
-        _observationCount.at(i)++;
+        _observationCount.at(k)++;
     }
 
     // computation of Allan Variance and Deviation
@@ -304,37 +303,33 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         _samplingInterval = static_cast<double>((obs->insTime - _startingInsTime).count()) / _imuObsCount;
         _averagingTimes.resize(_averagingFactorCount, 0.);
         _confidenceMultiplicationFactor.resize(_averagingFactorCount, 0.);
-        for (size_t i = 0; i < _averagingFactorCount; i++)
+        for (size_t k = 0; k < _averagingFactorCount; k++)
         {
-            _averagingTimes.at(i) = _averagingFactors.at(i) * _samplingInterval;
-            _confidenceMultiplicationFactor.at(i) = sqrt(0.5 / (_imuObsCount / _averagingFactors.at(i) - 1));
+            _averagingTimes.at(k) = _averagingFactors.at(k) * _samplingInterval;
+            _confidenceMultiplicationFactor.at(k) = sqrt(0.5 / (_imuObsCount / _averagingFactors.at(k) - 1));
         }
 
-        for (size_t j = 0; j < 3; j++)
+        for (size_t s = 0; s < 2; s++)
         {
-            _accelAllanVariance.at(j).resize(_averagingFactorCount, 0.);
-            _gyroAllanVariance.at(j).resize(_averagingFactorCount, 0.);
-            _accelAllanDeviation.at(j).resize(_averagingFactorCount, 0.);
-            _gyroAllanDeviation.at(j).resize(_averagingFactorCount, 0.);
-
-            for (size_t k = 0; k < 2; k++)
+            for (size_t d = 0; d < 3; d++)
             {
-                _accelAllanDeviationConfidenceIntervals.at(j).at(k).resize(_averagingFactorCount, 0.);
-                _gyroAllanDeviationConfidenceIntervals.at(j).at(k).resize(_averagingFactorCount, 0.);
-            }
+                _allanVariance.at(s).at(d).resize(_averagingFactorCount, 0.);
+                _allanDeviation.at(s).at(d).resize(_averagingFactorCount, 0.);
 
-            for (size_t i = 0; i < _averagingFactorCount; i++)
-            {
-                _accelAllanVariance.at(j).at(i) = _accelAllanSum.at(j).at(i) / (2 * pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
-                _gyroAllanVariance.at(j).at(i) = _gyroAllanSum.at(j).at(i) / (2 * pow(_averagingFactors.at(i), 2) * _observationCount.at(i));
+                for (size_t j = 0; j < 2; j++)
+                {
+                    _allanDeviationConfidenceIntervals.at(s).at(d).at(j).resize(_averagingFactorCount, 0.);
+                }
 
-                _accelAllanDeviation.at(j).at(i) = sqrt(_accelAllanVariance.at(j).at(i));
-                _gyroAllanDeviation.at(j).at(i) = sqrt(_gyroAllanVariance.at(j).at(i));
+                for (size_t k = 0; k < _averagingFactorCount; k++)
+                {
+                    _allanVariance.at(s).at(d).at(k) = _allanSum.at(s).at(d).at(k) / (2 * pow(_averagingFactors.at(k), 2) * _observationCount.at(k));
 
-                _accelAllanDeviationConfidenceIntervals.at(j).at(0).at(i) = _accelAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
-                _accelAllanDeviationConfidenceIntervals.at(j).at(1).at(i) = _accelAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
-                _gyroAllanDeviationConfidenceIntervals.at(j).at(0).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
-                _gyroAllanDeviationConfidenceIntervals.at(j).at(1).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
+                    _allanDeviation.at(s).at(d).at(k) = sqrt(_allanVariance.at(s).at(d).at(k));
+
+                    _allanDeviationConfidenceIntervals.at(s).at(d).at(0).at(k) = _allanDeviation.at(s).at(d).at(k) * (1 - _confidenceMultiplicationFactor.at(k));
+                    _allanDeviationConfidenceIntervals.at(s).at(d).at(1).at(k) = _allanDeviation.at(s).at(d).at(k) * (1 + _confidenceMultiplicationFactor.at(k));
+                }
             }
         }
 
@@ -350,71 +345,73 @@ void NAV::AllanDeviation::computeSlopes()
     unsigned long lo, hi;
     double divisor;
 
-    for (size_t j = 0; j < 3; j++)
+    for (size_t s = 0; s < 2; s++)
     {
-        _accelSlope.at(j).resize(_averagingFactorCount, 0.);
-        _gyroSlope.at(j).resize(_averagingFactorCount, 0.);
-    }
-
-    for (size_t i = 0; i < _averagingFactorCount; i++)
-    {
-        lo = (i == 0 ? i : i - 1);
-        hi = (i == _averagingFactorCount - 1 ? i : i + 1);
-
-        divisor = log(_averagingFactors.at(hi) / _averagingFactors.at(lo));
-
-        for (size_t j = 0; j < 3; j++)
+        for (size_t d = 0; d < 3; d++)
         {
-            _accelSlope.at(j).at(i) = log(_accelAllanVariance.at(j).at(hi) / _accelAllanVariance.at(j).at(lo)) / divisor;
-            _gyroSlope.at(j).at(i) = log(_gyroAllanVariance.at(j).at(hi) / _gyroAllanVariance.at(j).at(lo)) / divisor;
+            _slope.at(s).at(d).resize(_averagingFactorCount, 0.);
+        }
+
+        for (size_t k = 0; k < _averagingFactorCount; k++)
+        {
+            lo = (k == 0 ? k : k - 1);
+            hi = (k == _averagingFactorCount - 1 ? k : k + 1);
+
+            divisor = log(_averagingFactors.at(hi) / _averagingFactors.at(lo));
+
+            for (size_t d = 0; d < 3; d++)
+            {
+                _slope.at(s).at(d).at(k) = log(_allanVariance.at(s).at(d).at(hi) / _allanVariance.at(s).at(d).at(lo)) / divisor;
+            }
         }
     }
 }
 
 void NAV::AllanDeviation::estimateNoiseParameters()
 {
-    for (size_t i = 0; i < 3; i++)
+    for (size_t s = 0; s < 2; s++)
     {
-        Eigen::Map<Eigen::VectorXd> accelAvar(_accelAllanVariance.at(i).data(), static_cast<long>(_averagingFactorCount));
-
-        std::vector<double> accelAvarN;
-        std::vector<double> weightsN;
-        std::vector<double> averagingTimesInv;
-
-        for (size_t j = 0; j < _averagingFactorCount; j++)
+        for (size_t d = 0; d < 3; d++)
         {
-            if (_accelSlope.at(i).at(j) > -1.5 && _accelSlope.at(i).at(j) < -0.5)
+            std::vector<double> avarN;
+            std::vector<double> weightsN;
+            std::vector<double> averagingTimesInv;
+
+            for (size_t k = 0; k < _averagingFactorCount; k++)
             {
-                accelAvarN.push_back(_accelAllanVariance.at(i).at(j));
-                weightsN.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(j) * _accelAllanVariance.at(i).at(j), 2.));
-                averagingTimesInv.push_back(1 / _averagingTimes.at(j));
+                if (_slope.at(s).at(d).at(k) > -1.5 && _slope.at(s).at(d).at(k) < -0.5)
+                {
+                    avarN.push_back(_allanVariance.at(s).at(d).at(k));
+                    weightsN.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(k) * _allanVariance.at(s).at(d).at(k), 2.));
+                    averagingTimesInv.push_back(1 / _averagingTimes.at(k));
+                }
             }
-        }
 
-        long m = static_cast<long>(accelAvarN.size());
+            long m = static_cast<long>(avarN.size());
 
-        Eigen::Map<Eigen::VectorXd> y(accelAvarN.data(), m);
-        Eigen::Map<Eigen::VectorXd> A(averagingTimesInv.data(), m);
-        Eigen::Map<Eigen::VectorXd> p(weightsN.data(), m);
-        Eigen::VectorXd x;
+            Eigen::Map<Eigen::VectorXd> y(avarN.data(), m);
+            Eigen::Map<Eigen::VectorXd> A(averagingTimesInv.data(), m);
+            Eigen::Map<Eigen::VectorXd> p(weightsN.data(), m);
+            Eigen::VectorXd x;
 
-        if (m > 0)
-        {
-            x = (A.transpose() * p.asDiagonal() * A).inverse() * A.transpose() * p.asDiagonal() * y;
-            _accel_S_N.at(i) = x(0);
-        }
-        else
-        {
-            _accel_S_N.at(i) = 0;
-        }
+            if (m > 0)
+            {
+                x = (A.transpose() * p.asDiagonal() * A).inverse() * A.transpose() * p.asDiagonal() * y;
+                _S_N.at(s).at(d) = x(0);
+            }
+            else
+            {
+                _S_N.at(s).at(d) = 0;
+            }
 
-        _accelEstimatedAllanDeviation.at(i).resize(_averagingFactorCount, 0.);
+            _estimatedAllanDeviation.at(s).at(d).resize(_averagingFactorCount, 0.);
 
-        double N = sqrt(_accel_S_N.at(i));
+            double N = sqrt(_S_N.at(s).at(d));
 
-        for (size_t j = 0; j < _averagingFactorCount; j++)
-        {
-            _accelEstimatedAllanDeviation.at(i).at(j) = N / sqrt(_averagingTimes.at(j));
+            for (size_t k = 0; k < _averagingFactorCount; k++)
+            {
+                _estimatedAllanDeviation.at(s).at(d).at(k) = N / sqrt(_averagingTimes.at(k));
+            }
         }
     }
 }

@@ -89,28 +89,19 @@ class AllanDeviation : public Node
     InsTime _startingInsTime;
 
     /// Cumulative Sums of accelerometer and gyroscope data
-    std::vector<Eigen::Vector3d> _accelCumSum{ Eigen::Vector3d::Zero() };
-    std::vector<Eigen::Vector3d> _gyroCumSum{ Eigen::Vector3d::Zero() };
-
-    /// temporary variable for computation of Allan Sum
-    Eigen::Vector3d _accelTempSum;
-    Eigen::Vector3d _gyroTempSum;
+    std::array<std::vector<Eigen::Vector3d>, 2> _cumSum{ { { Eigen::Vector3d::Zero() }, { Eigen::Vector3d::Zero() } } };
 
     /// Allan Variance precursor
-    std::array<std::vector<double>, 3> _accelAllanSum;
-    std::array<std::vector<double>, 3> _gyroAllanSum;
+    std::array<std::array<std::vector<double>, 3>, 2> _allanSum;
 
     /// Allan Variance of accelerometer and gyroscope data
-    std::array<std::vector<double>, 3> _accelAllanVariance;
-    std::array<std::vector<double>, 3> _gyroAllanVariance;
+    std::array<std::array<std::vector<double>, 3>, 2> _allanVariance;
 
     /// Allan Deviation of accelerometer and gyroscope data
-    std::array<std::vector<double>, 3> _accelAllanDeviation;
-    std::array<std::vector<double>, 3> _gyroAllanDeviation;
+    std::array<std::array<std::vector<double>, 3>, 2> _allanDeviation;
 
     /// Slope of Allan Variance of accelerometer and gyroscope data
-    std::array<std::vector<double>, 3> _accelSlope;
-    std::array<std::vector<double>, 3> _gyroSlope;
+    std::array<std::array<std::vector<double>, 3>, 2> _slope;
 
     /// averaging factors (n) used for Allan Variance computation
     std::vector<double> _averagingFactors;
@@ -140,14 +131,13 @@ class AllanDeviation : public Node
     std::vector<double> _confidenceMultiplicationFactor;
 
     /// Confidence of Allan Deviation of accelerometer and gyroscope data
-    std::array<std::array<std::vector<double>, 2>, 3> _accelAllanDeviationConfidenceIntervals;
-    std::array<std::array<std::vector<double>, 2>, 3> _gyroAllanDeviationConfidenceIntervals;
+    std::array<std::array<std::array<std::vector<double>, 2>, 3>, 2> _allanDeviationConfidenceIntervals;
 
     bool _updateLast{ false };
 
-    std::array<double, 3> _accel_S_N;
+    std::array<std::array<double, 3>, 2> _S_N;
 
-    std::array<std::vector<double>, 3> _accelEstimatedAllanDeviation;
+    std::array<std::array<std::vector<double>, 3>, 2> _estimatedAllanDeviation;
 };
 
 } // namespace NAV
