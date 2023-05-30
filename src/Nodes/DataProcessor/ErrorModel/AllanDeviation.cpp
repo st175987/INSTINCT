@@ -21,6 +21,8 @@ namespace nm = NAV::NodeManager;
 
 #include <chrono>
 
+#include <unsupported/Eigen/MatrixFunctions>
+
 NAV::AllanDeviation::AllanDeviation()
     : Node(typeStatic())
 {
@@ -64,6 +66,8 @@ void NAV::AllanDeviation::guiConfig()
     static bool displayConfidence = false;
     static float confidenceFillAlpha = 0.4f;
 
+    static bool displayEstimation = false;
+
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("AllanDeviationTabBar", tab_bar_flags))
     {
@@ -80,15 +84,19 @@ void NAV::AllanDeviation::guiConfig()
                 {
                     if (displayConfidence & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidence.at(i).at(0).data(), _accelAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviationConfidenceIntervals.at(i).at(0).data(), _accelAllanDeviationConfidenceIntervals.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
                     ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                    if (displayEstimation & !_averagingTimes.empty())
+                    {
+                        ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _accelEstimatedAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
+                    }
                 }
                 ImPlot::EndPlot();
             }
             if (ImGui::TreeNode("Slopes"))
             {
-                if (ImPlot::BeginPlot("Slopes of Allen Deviation"))
+                if (ImPlot::BeginPlot("Slopes of Allan Variance"))
                 {
                     ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                     ImPlot::SetupAxis(ImAxis_X1, "τ [s]", ImPlotAxisFlags_AutoFit);
@@ -120,7 +128,7 @@ void NAV::AllanDeviation::guiConfig()
                 {
                     if (displayConfidence & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidence.at(i).at(0).data(), _gyroAllanDeviationConfidence.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotShaded(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviationConfidenceIntervals.at(i).at(0).data(), _gyroAllanDeviationConfidenceIntervals.at(i).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
                     ImPlot::PlotLine(legendEntries.at(i), _averagingTimes.data(), _gyroAllanDeviation.at(i).data(), static_cast<int>(_averagingTimes.size()));
                 }
@@ -128,7 +136,7 @@ void NAV::AllanDeviation::guiConfig()
             }
             if (ImGui::TreeNode("Slopes"))
             {
-                if (ImPlot::BeginPlot("Slopes of Allen Deviation"))
+                if (ImPlot::BeginPlot("Slopes of Allan Variance"))
                 {
                     ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
                     ImPlot::SetupAxis(ImAxis_X1, "τ [s]", ImPlotAxisFlags_AutoFit);
@@ -155,6 +163,7 @@ void NAV::AllanDeviation::guiConfig()
         if (!displayConfidence)
             ImGui::EndDisabled();
         ImGui::Checkbox("Compute Allan Deviation last", &_updateLast);
+        ImGui::Checkbox("Display Estimation", &displayEstimation);
     }
 }
 
@@ -204,8 +213,8 @@ bool NAV::AllanDeviation::initialize()
     _accelSlope = std::array<std::vector<double>, 3>{};
     _gyroSlope = std::array<std::vector<double>, 3>{};
 
-    _accelAllanDeviationConfidence = std::array<std::array<std::vector<double>, 2>, 3>{};
-    _gyroAllanDeviationConfidence = std::array<std::array<std::vector<double>, 2>, 3>{};
+    _accelAllanDeviationConfidenceIntervals = std::array<std::array<std::vector<double>, 2>, 3>{};
+    _gyroAllanDeviationConfidenceIntervals = std::array<std::array<std::vector<double>, 2>, 3>{};
 
     _imuObsCount = 0;
 
@@ -214,6 +223,10 @@ bool NAV::AllanDeviation::initialize()
     _nextAveragingFactorExponent = 1;
 
     _nextAveragingFactor = 1;
+
+    _accel_S_N = std::array<double, 3>{};
+
+    _accelEstimatedAllanDeviation = std::array<std::vector<double>, 3>{};
 
     return true;
 }
@@ -306,8 +319,8 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
 
             for (size_t k = 0; k < 2; k++)
             {
-                _accelAllanDeviationConfidence.at(j).at(k).resize(_averagingFactorCount, 0.);
-                _gyroAllanDeviationConfidence.at(j).at(k).resize(_averagingFactorCount, 0.);
+                _accelAllanDeviationConfidenceIntervals.at(j).at(k).resize(_averagingFactorCount, 0.);
+                _gyroAllanDeviationConfidenceIntervals.at(j).at(k).resize(_averagingFactorCount, 0.);
             }
 
             for (size_t i = 0; i < _averagingFactorCount; i++)
@@ -318,10 +331,10 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
                 _accelAllanDeviation.at(j).at(i) = sqrt(_accelAllanVariance.at(j).at(i));
                 _gyroAllanDeviation.at(j).at(i) = sqrt(_gyroAllanVariance.at(j).at(i));
 
-                _accelAllanDeviationConfidence.at(j).at(0).at(i) = _accelAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
-                _accelAllanDeviationConfidence.at(j).at(1).at(i) = _accelAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
-                _gyroAllanDeviationConfidence.at(j).at(0).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
-                _gyroAllanDeviationConfidence.at(j).at(1).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
+                _accelAllanDeviationConfidenceIntervals.at(j).at(0).at(i) = _accelAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
+                _accelAllanDeviationConfidenceIntervals.at(j).at(1).at(i) = _accelAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
+                _gyroAllanDeviationConfidenceIntervals.at(j).at(0).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 - _confidenceMultiplicationFactor.at(i));
+                _gyroAllanDeviationConfidenceIntervals.at(j).at(1).at(i) = _gyroAllanDeviation.at(j).at(i) * (1 + _confidenceMultiplicationFactor.at(i));
             }
         }
 
@@ -360,12 +373,48 @@ void NAV::AllanDeviation::computeSlopes()
 
 void NAV::AllanDeviation::estimateNoiseParameters()
 {
-    Eigen::Map<Eigen::VectorXd> taus(_averagingTimes.data(), static_cast<long>(_averagingFactorCount));
-    for (size_t i = 0; i < 1; i++)
+    for (size_t i = 0; i < 3; i++)
     {
-        Eigen::Map<Eigen::VectorXd> accelAvar(_accelAllanVariance.at(0).data(), static_cast<long>(_averagingFactorCount));
-        Eigen::Map<Eigen::VectorXd> accelSlope(_accelSlope.at(0).data(), static_cast<long>(_averagingFactorCount));
+        Eigen::Map<Eigen::VectorXd> accelAvar(_accelAllanVariance.at(i).data(), static_cast<long>(_averagingFactorCount));
 
-        Eigen::Array<bool, Eigen::Dynamic, 1> maskN = (accelSlope.array() > -1.5 && accelSlope.array() < -0.5);
+        std::vector<double> accelAvarN;
+        std::vector<double> weightsN;
+        std::vector<double> averagingTimesInv;
+
+        for (size_t j = 0; j < _averagingFactorCount; j++)
+        {
+            if (_accelSlope.at(i).at(j) > -1.5 && _accelSlope.at(i).at(j) < -0.5)
+            {
+                accelAvarN.push_back(_accelAllanVariance.at(i).at(j));
+                weightsN.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(j) * _accelAllanVariance.at(i).at(j), 2.));
+                averagingTimesInv.push_back(1 / _averagingTimes.at(j));
+            }
+        }
+
+        long m = static_cast<long>(accelAvarN.size());
+
+        Eigen::Map<Eigen::VectorXd> y(accelAvarN.data(), m);
+        Eigen::Map<Eigen::VectorXd> A(averagingTimesInv.data(), m);
+        Eigen::Map<Eigen::VectorXd> p(weightsN.data(), m);
+        Eigen::VectorXd x;
+
+        if (m > 0)
+        {
+            x = (A.transpose() * p.asDiagonal() * A).inverse() * A.transpose() * p.asDiagonal() * y;
+            _accel_S_N.at(i) = x(0);
+        }
+        else
+        {
+            _accel_S_N.at(i) = 0;
+        }
+
+        _accelEstimatedAllanDeviation.at(i).resize(_averagingFactorCount, 0.);
+
+        double N = sqrt(_accel_S_N.at(i));
+
+        for (size_t j = 0; j < _averagingFactorCount; j++)
+        {
+            _accelEstimatedAllanDeviation.at(i).at(j) = N / sqrt(_averagingTimes.at(j));
+        }
     }
 }

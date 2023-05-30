@@ -140,10 +140,14 @@ class AllanDeviation : public Node
     std::vector<double> _confidenceMultiplicationFactor;
 
     /// Confidence of Allan Deviation of accelerometer and gyroscope data
-    std::array<std::array<std::vector<double>, 2>, 3> _accelAllanDeviationConfidence;
-    std::array<std::array<std::vector<double>, 2>, 3> _gyroAllanDeviationConfidence;
+    std::array<std::array<std::vector<double>, 2>, 3> _accelAllanDeviationConfidenceIntervals;
+    std::array<std::array<std::vector<double>, 2>, 3> _gyroAllanDeviationConfidenceIntervals;
 
-    bool _updateLast{false};
+    bool _updateLast{ false };
+
+    std::array<double, 3> _accel_S_N;
+
+    std::array<std::vector<double>, 3> _accelEstimatedAllanDeviation;
 };
 
 } // namespace NAV
