@@ -163,6 +163,11 @@ void NAV::AllanDeviation::guiConfig()
             ImGui::EndDisabled();
         ImGui::Checkbox("Compute Allan Deviation last", &_updateLast);
         ImGui::Checkbox("Display Estimation", &_displayEstimation);
+        if (ImGui::TreeNode("Estimation Parameters"))
+        {
+            ImGui::Checkbox("Estimate Random Walk", &_estimateRandomWalk);
+            ImGui::TreePop();
+        }
     }
 }
 
@@ -176,6 +181,7 @@ void NAV::AllanDeviation::guiConfig()
     j["confidenceFillAlpha"] = _confidenceFillAlpha;
     j["updateLast"] = _updateLast;
     j["displayEstimation"] = _displayEstimation;
+    j["estimateRandomWalk"] = _estimateRandomWalk;
 
     return j;
 }
@@ -199,6 +205,10 @@ void NAV::AllanDeviation::restore(json const& j)
     if (j.contains("displayEstimation"))
     {
         j.at("displayEstimation").get_to(_displayEstimation);
+    }
+    if (j.contains("estimateRandomWalk"))
+    {
+        j.at("estimateRandomWalk").get_to(_estimateRandomWalk);
     }
 }
 
@@ -383,44 +393,84 @@ void NAV::AllanDeviation::estimateNoiseParameters()
     {
         for (size_t d = 0; d < 3; d++)
         {
-            std::vector<double> avarN;
-            std::vector<double> weightsN;
-            std::vector<double> averagingTimesInv;
+            // white noise estimation
+            std::vector<double> avar_N;
+            std::vector<double> weights_N;
+            std::vector<double> vec_A_N;
 
             for (size_t k = 0; k < _averagingFactorCount; k++)
             {
                 if (_slope.at(s).at(d).at(k) > -1.5 && _slope.at(s).at(d).at(k) < -0.5)
                 {
-                    avarN.push_back(_allanVariance.at(s).at(d).at(k));
-                    weightsN.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(k) * _allanVariance.at(s).at(d).at(k), 2.));
-                    averagingTimesInv.push_back(1 / _averagingTimes.at(k));
+                    avar_N.push_back(_allanVariance.at(s).at(d).at(k));
+                    weights_N.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(k) * _allanVariance.at(s).at(d).at(k), 2.));
+                    vec_A_N.push_back(1 / _averagingTimes.at(k));
                 }
             }
 
-            long m = static_cast<long>(avarN.size());
+            long m_N = static_cast<long>(avar_N.size());
 
-            Eigen::Map<Eigen::VectorXd> y(avarN.data(), m);
-            Eigen::Map<Eigen::VectorXd> A(averagingTimesInv.data(), m);
-            Eigen::Map<Eigen::VectorXd> p(weightsN.data(), m);
-            Eigen::VectorXd x;
-
-            if (m > 0)
+            if (m_N > 0)
             {
-                x = (A.transpose() * p.asDiagonal() * A).inverse() * A.transpose() * p.asDiagonal() * y;
-                _S_N.at(s).at(d) = x(0);
+                Eigen::Map<Eigen::VectorXd> y_N(avar_N.data(), m_N);
+                Eigen::Map<Eigen::VectorXd> A_N(vec_A_N.data(), m_N);
+                Eigen::Map<Eigen::VectorXd> p_N(weights_N.data(), m_N);
+                Eigen::VectorXd x_N;
+
+                x_N = (A_N.transpose() * p_N.asDiagonal() * A_N).inverse() * A_N.transpose() * p_N.asDiagonal() * y_N;
+                _S_N.at(s).at(d) = x_N(0);
             }
             else
             {
                 _S_N.at(s).at(d) = 0;
             }
 
-            _estimatedAllanDeviation.at(s).at(d).resize(_averagingFactorCount, 0.);
+            // random walk estimation
+            if (_estimateRandomWalk)
+            {
+                std::vector<double> avar_K;
+                std::vector<double> weights_K;
+                std::vector<double> vec_A_K;
 
-            double N = sqrt(_S_N.at(s).at(d));
+                for (size_t k = 0; k < _averagingFactorCount; k++)
+                {
+                    double tempAvar = _allanVariance.at(s).at(d).at(k) - _S_N.at(s).at(d) / _averagingTimes.at(k);
+                    if (_slope.at(s).at(d).at(k) > 0.5 && _slope.at(s).at(d).at(k) < 1.5 && tempAvar > 0.)
+                    {
+                        avar_K.push_back(tempAvar);
+                        weights_K.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(k) * _allanVariance.at(s).at(d).at(k), 2.));
+                        vec_A_K.push_back(_averagingTimes.at(k) / 3);
+                    }
+                }
+
+                long m_K = static_cast<long>(avar_K.size());
+
+                if (m_K > 0)
+                {
+                    Eigen::Map<Eigen::VectorXd> y_K(avar_K.data(), m_K);
+                    Eigen::Map<Eigen::VectorXd> A_K(vec_A_K.data(), m_K);
+                    Eigen::Map<Eigen::VectorXd> p_K(weights_K.data(), m_K);
+                    Eigen::VectorXd x_K;
+
+                    x_K = (A_K.transpose() * p_K.asDiagonal() * A_K).inverse() * A_K.transpose() * p_K.asDiagonal() * y_K;
+                    _S_K.at(s).at(d) = x_K(0);
+                }
+                else
+                {
+                    _S_K.at(s).at(d) = 0;
+                }
+            }
+            else
+            {
+                _S_K.at(s).at(d) = 0;
+            }
+
+            // compute estimated Allan Deviation
+            _estimatedAllanDeviation.at(s).at(d).resize(_averagingFactorCount, 0.);
 
             for (size_t k = 0; k < _averagingFactorCount; k++)
             {
-                _estimatedAllanDeviation.at(s).at(d).at(k) = N / sqrt(_averagingTimes.at(k));
+                _estimatedAllanDeviation.at(s).at(d).at(k) = sqrt(_S_N.at(s).at(d) / _averagingTimes.at(k) + _S_K.at(s).at(d) / 3. * _averagingTimes.at(k));
             }
         }
     }

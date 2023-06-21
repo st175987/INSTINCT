@@ -138,8 +138,18 @@ class AllanDeviation : public Node
 
     bool _updateLast{ false };
 
+    /// estimation variables
+
     bool _displayEstimation{ false };
+
     std::array<std::array<double, 3>, 2> _S_N;
+
+    bool _estimateRandomWalk{ false };
+    std::array<std::array<double, 3>, 2> _S_K;
+
+    // bool _estimateCorrelatedNoise{ true };
+    // std::array<std::array<double, 3>, 2> _S_G;
+    // std::array<std::array<double, 3>, 2> _tau_G;
 
     std::array<std::array<std::vector<double>, 3>, 2> _estimatedAllanDeviation;
 };
