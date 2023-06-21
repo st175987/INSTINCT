@@ -133,8 +133,12 @@ class AllanDeviation : public Node
     /// Confidence of Allan Deviation of accelerometer and gyroscope data
     std::array<std::array<std::array<std::vector<double>, 2>, 3>, 2> _allanDeviationConfidenceIntervals;
 
+    bool _displayConfidence{ false };
+    float _confidenceFillAlpha{ 0.4f };
+
     bool _updateLast{ false };
 
+    bool _displayEstimation{ false };
     std::array<std::array<double, 3>, 2> _S_N;
 
     std::array<std::array<std::vector<double>, 3>, 2> _estimatedAllanDeviation;

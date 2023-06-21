@@ -63,11 +63,6 @@ void NAV::AllanDeviation::guiConfig()
 
     static double slopeTicks[] = { -2, -1, 0, 1, 2 };
 
-    static bool displayConfidence = false;
-    static float confidenceFillAlpha = 0.4f;
-
-    static bool displayEstimation = false;
-
     ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
     if (ImGui::BeginTabBar("AllanDeviationTabBar", tab_bar_flags))
     {
@@ -79,15 +74,15 @@ void NAV::AllanDeviation::guiConfig()
                 ImPlot::SetupAxes("τ [s]", "σ [m/s²]", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
+                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, _confidenceFillAlpha);
                 for (size_t d = 0; d < 3; d++)
                 {
-                    if (displayConfidence & !_averagingTimes.empty())
+                    if (_displayConfidence & !_averagingTimes.empty())
                     {
                         ImPlot::PlotShaded(legendEntries.at(d), _averagingTimes.data(), _allanDeviationConfidenceIntervals.at(0).at(d).at(0).data(), _allanDeviationConfidenceIntervals.at(0).at(d).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
                     ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _allanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
-                    if (displayEstimation & !_averagingTimes.empty())
+                    if (_displayEstimation & !_averagingTimes.empty())
                     {
                         ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     }
@@ -120,18 +115,18 @@ void NAV::AllanDeviation::guiConfig()
             if (ImPlot::BeginPlot("Allan Deviation of Gyroscope"))
             {
                 ImPlot::SetupLegend(ImPlotLocation_SouthWest, ImPlotLegendFlags_None);
-                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, confidenceFillAlpha);
+                ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, _confidenceFillAlpha);
                 ImPlot::SetupAxes("τ [s]", "σ [rad/s]", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                 for (size_t d = 0; d < 3; d++)
                 {
-                    if (displayConfidence & !_averagingTimes.empty())
+                    if (_displayConfidence & !_averagingTimes.empty())
                     {
                         ImPlot::PlotShaded(legendEntries.at(d), _averagingTimes.data(), _allanDeviationConfidenceIntervals.at(1).at(d).at(0).data(), _allanDeviationConfidenceIntervals.at(1).at(d).at(1).data(), static_cast<int>(_averagingTimes.size()));
                     }
                     ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _allanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
-                    if (displayEstimation & !_averagingTimes.empty())
+                    if (_displayEstimation & !_averagingTimes.empty())
                     {
                         ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     }
@@ -160,14 +155,14 @@ void NAV::AllanDeviation::guiConfig()
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
-        ImGui::Checkbox("Display Confidence Intervals", &displayConfidence);
-        if (!displayConfidence)
+        ImGui::Checkbox("Display Confidence Intervals", &_displayConfidence);
+        if (!_displayConfidence)
             ImGui::BeginDisabled();
-        ImGui::SliderFloat("Confidence Alpha Channel", &confidenceFillAlpha, 0.0f, 1.0f, "%.2f");
-        if (!displayConfidence)
+        ImGui::SliderFloat("Confidence Alpha Channel", &_confidenceFillAlpha, 0.0f, 1.0f, "%.2f");
+        if (!_displayConfidence)
             ImGui::EndDisabled();
         ImGui::Checkbox("Compute Allan Deviation last", &_updateLast);
-        ImGui::Checkbox("Display Estimation", &displayEstimation);
+        ImGui::Checkbox("Display Estimation", &_displayEstimation);
     }
 }
 
@@ -177,7 +172,10 @@ void NAV::AllanDeviation::guiConfig()
 
     json j;
 
-    // j["outputFrequency"] = _outputFrequency;
+    j["displayConfidence"] = _displayConfidence;
+    j["confidenceFillAlpha"] = _confidenceFillAlpha;
+    j["updateLast"] = _updateLast;
+    j["displayEstimation"] = _displayEstimation;
 
     return j;
 }
@@ -186,9 +184,21 @@ void NAV::AllanDeviation::restore(json const& j)
 {
     LOG_TRACE("{}: called", nameId());
 
-    if (j.contains("outputFrequency"))
+    if (j.contains("displayConfidence"))
     {
-        // j.at("outputFrequency").get_to(_outputFrequency);
+        j.at("displayConfidence").get_to(_displayConfidence);
+    }
+    if (j.contains("confidenceFillAlpha"))
+    {
+        j.at("confidenceFillAlpha").get_to(_confidenceFillAlpha);
+    }
+    if (j.contains("updateLast"))
+    {
+        j.at("updateLast").get_to(_updateLast);
+    }
+    if (j.contains("displayEstimation"))
+    {
+        j.at("displayEstimation").get_to(_displayEstimation);
     }
 }
 
