@@ -166,6 +166,7 @@ void NAV::AllanDeviation::guiConfig()
         if (ImGui::TreeNode("Estimation Parameters"))
         {
             ImGui::Checkbox("Estimate Random Walk", &_estimateRandomWalk);
+            ImGui::Checkbox("Estimate Correlated Noise", &_estimateCorrelatedNoise);
             ImGui::TreePop();
         }
     }
@@ -182,6 +183,7 @@ void NAV::AllanDeviation::guiConfig()
     j["updateLast"] = _updateLast;
     j["displayEstimation"] = _displayEstimation;
     j["estimateRandomWalk"] = _estimateRandomWalk;
+    j["estimateCorrelatedNoise"] = _estimateCorrelatedNoise;
 
     return j;
 }
@@ -209,6 +211,10 @@ void NAV::AllanDeviation::restore(json const& j)
     if (j.contains("estimateRandomWalk"))
     {
         j.at("estimateRandomWalk").get_to(_estimateRandomWalk);
+    }
+    if (j.contains("estimateCorrelatedNoise"))
+    {
+        j.at("estimateCorrelatedNoise").get_to(_estimateCorrelatedNoise);
     }
 }
 
@@ -394,10 +400,11 @@ void NAV::AllanDeviation::estimateNoiseParameters()
         for (size_t d = 0; d < 3; d++)
         {
             // white noise estimation
-            std::vector<double> avar_N;
-            std::vector<double> weights_N;
-            std::vector<double> vec_A_N;
+            std::vector<double> avar_N;    // observations
+            std::vector<double> weights_N; // weights
+            std::vector<double> vec_A_N;   // design matrix
 
+            // only use data where slope is between -1.5 and -0.5
             for (size_t k = 0; k < _averagingFactorCount; k++)
             {
                 if (_slope.at(s).at(d).at(k) > -1.5 && _slope.at(s).at(d).at(k) < -0.5)
@@ -410,8 +417,10 @@ void NAV::AllanDeviation::estimateNoiseParameters()
 
             long m_N = static_cast<long>(avar_N.size());
 
+            // least squares
             if (m_N > 0)
             {
+                // convert to Eigen data types
                 Eigen::Map<Eigen::VectorXd> y_N(avar_N.data(), m_N);
                 Eigen::Map<Eigen::VectorXd> A_N(vec_A_N.data(), m_N);
                 Eigen::Map<Eigen::VectorXd> p_N(weights_N.data(), m_N);
@@ -428,10 +437,11 @@ void NAV::AllanDeviation::estimateNoiseParameters()
             // random walk estimation
             if (_estimateRandomWalk)
             {
-                std::vector<double> avar_K;
-                std::vector<double> weights_K;
-                std::vector<double> vec_A_K;
+                std::vector<double> avar_K;    // observations
+                std::vector<double> weights_K; // weights
+                std::vector<double> vec_A_K;   // design matrix
 
+                // only use data where slope is between 0.5 and 1.5 and is above white noise
                 for (size_t k = 0; k < _averagingFactorCount; k++)
                 {
                     double tempAvar = _allanVariance.at(s).at(d).at(k) - _S_N.at(s).at(d) / _averagingTimes.at(k);
@@ -445,8 +455,10 @@ void NAV::AllanDeviation::estimateNoiseParameters()
 
                 long m_K = static_cast<long>(avar_K.size());
 
+                // least squares
                 if (m_K > 0)
                 {
+                    // convert to Eigen data types
                     Eigen::Map<Eigen::VectorXd> y_K(avar_K.data(), m_K);
                     Eigen::Map<Eigen::VectorXd> A_K(vec_A_K.data(), m_K);
                     Eigen::Map<Eigen::VectorXd> p_K(weights_K.data(), m_K);
@@ -465,13 +477,160 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                 _S_K.at(s).at(d) = 0;
             }
 
+            // correlated noise estimation
+            if (_estimateCorrelatedNoise)
+            {
+                std::vector<double> avar_G;    // observations
+                std::vector<double> weights_G; // weights
+                std::vector<double> taus_G;    // averaging times
+
+                // only use data where slope is between -0.5 and 0.5 and is above white noise and random walk noise
+                for (size_t k = 0; k < _averagingFactorCount; k++)
+                {
+                    double tempAvar = _allanVariance.at(s).at(d).at(k)
+                                      - _S_N.at(s).at(d) / _averagingTimes.at(k)
+                                      - _S_K.at(s).at(d) / 3 * _averagingTimes.at(k);
+                    if (_slope.at(s).at(d).at(k) > -0.5 && _slope.at(s).at(d).at(k) < 0.5 && tempAvar > 0.)
+                    {
+                        avar_G.push_back(tempAvar);
+                        weights_G.push_back(1 / pow(2. * _confidenceMultiplicationFactor.at(k) * _allanVariance.at(s).at(d).at(k), 2.));
+                        taus_G.push_back(_averagingTimes.at(k));
+                    }
+                }
+
+                long m_G = static_cast<long>(avar_G.size());
+
+                if (m_G > 0)
+                {
+                    Eigen::Vector2d x_G_0;
+
+                    if (_estimateRandomWalk && _S_K.at(s).at(d) != 0) // compute S_G and tau_G with random walk noise
+                    {
+                        double tau_min = sqrt(3 * _S_N.at(s).at(d) / _S_K.at(s).at(d));
+                        x_G_0(1) = tau_min / _gamma_tau;
+
+                        double sigma_min = 2 * sqrt(_S_N.at(s).at(d) * _S_K.at(s).at(d) / 3);
+
+                        auto upper_tau = std::upper_bound(_averagingTimes.begin(), _averagingTimes.end(), tau_min);
+                        unsigned long upper_tau_idx = static_cast<unsigned long>(upper_tau - _averagingTimes.begin());
+                        unsigned long idx = (upper_tau_idx == _averagingTimes.size() ? upper_tau_idx - 1 : upper_tau_idx);
+
+                        x_G_0(0) = (_allanVariance.at(s).at(d).at(idx) - sigma_min) / (x_G_0(1) * _gamma_sigma * _gamma_sigma);
+                        if (x_G_0(0) < 0. || x_G_0(1) < 0.)
+                        {
+                            x_G_0 = Eigen::Vector2d::Zero();
+                        }
+                    }
+                    else // compute S_G and tau_G without random walk noise
+                    {
+                        if (_averagingFactorCount > _averagingFactorsPerDecade)
+                        {
+                            auto min_avar = std::min_element(_allanVariance.at(s).at(d).begin(),
+                                                             _allanVariance.at(s).at(d).end() - static_cast<long>(_averagingFactorsPerDecade));
+                            unsigned long idx_min = static_cast<unsigned long>(std::distance(std::begin(_allanVariance.at(s).at(d)), min_avar));
+
+                            double tau_min = _averagingTimes.at(idx_min) / _gamma_tau;
+                            x_G_0(1) = tau_min / _gamma_tau;
+
+                            auto upper_tau = std::upper_bound(_averagingTimes.begin(), _averagingTimes.end(), tau_min);
+                            unsigned long upper_tau_idx = static_cast<unsigned long>(upper_tau - _averagingTimes.begin());
+                            unsigned long idx = (upper_tau_idx == _averagingTimes.size() ? upper_tau_idx - 1 : upper_tau_idx);
+
+                            x_G_0(0) = (_allanVariance.at(s).at(d).at(idx)) / (x_G_0(1) * _gamma_sigma * _gamma_sigma);
+                            if (x_G_0(0) < 0. || x_G_0(1) < 0.)
+                            {
+                                x_G_0 = Eigen::Vector2d::Zero();
+                            }
+                        }
+                        else
+                        {
+                            x_G_0 = Eigen::Vector2d::Zero();
+                        }
+                    }
+
+                    // iterative least squares
+                    if (x_G_0(0) < 0. || x_G_0(1) < 0.)
+                    {
+                        double max_dx = 0;
+
+                        unsigned int iterations = 0;
+                        unsigned int number_of_iterations = 100;
+
+                        std::vector<double> taus_G;
+
+                        do
+                        {
+                            // convert to Eigen data types
+                            Eigen::Map<Eigen::VectorXd> y_G(avar_G.data(), m_G);
+                            Eigen::Map<Eigen::VectorXd> p_G(weights_G.data(), m_G);
+
+                            Eigen::VectorXd A_S_G;
+                            Eigen::VectorXd A_tau_G;
+
+                            Eigen::Matrix<double, Eigen::Dynamic, 2> A_G;
+
+                            Eigen::VectorXd y_0;
+
+                            // compute design matrix and residuals
+                            for (size_t k = 0; k < static_cast<unsigned long>(m_G); k++)
+                            {
+                                long eigen_k = static_cast<long>(k);
+                                A_G(eigen_k, 0) = x_G_0(1) / taus_G.at(k)
+                                                  * (1. - x_G_0(1) / (2. * taus_G.at(k)) * (3. - 4. * exp(-taus_G.at(k) / x_G_0(1)) + exp(-2. * taus_G.at(k) / x_G_0(1))));
+                                A_G(eigen_k, 1) = x_G_0(0) / taus_G.at(k)
+                                                  * (2. * x_G_0(1) - 9. * x_G_0(1) * x_G_0(1) / (2. * taus_G.at(k)) + (6. * x_G_0(1) * x_G_0(1) / taus_G.at(k) + 2. * x_G_0(1)) * exp(-taus_G.at(k) / x_G_0(1)) - (3. * x_G_0(1) * x_G_0(1) / (2. * taus_G.at(k)) + x_G_0(1)) * exp(-2. * taus_G.at(k) / x_G_0(1)));
+
+                                y_0(eigen_k) = computeCorrelatedNoiseAllanVariance(x_G_0(0), x_G_0(1), taus_G.at(k));
+                            }
+
+                            Eigen::VectorXd dy = y_G - y_0;
+
+                            Eigen::Vector2d dx = (A_G.transpose() * p_G.asDiagonal() * A_G).inverse() * A_G.transpose() * p_G.asDiagonal() * dy;
+
+                            max_dx = dx.norm();
+
+                            x_G_0 += dx;
+
+                            iterations++;
+                        } while (max_dx > 1e-10 && iterations < number_of_iterations);
+                    }
+
+                    _S_G.at(s).at(d) = x_G_0(0);
+                    _tau_G.at(s).at(d) = x_G_0(1);
+                }
+                else
+                {
+                    _S_G.at(s).at(d) = 0;
+                    _tau_G.at(s).at(d) = 0;
+                }
+            }
+            else
+            {
+                _S_G.at(s).at(d) = 0;
+                _tau_G.at(s).at(d) = 0;
+            }
+
             // compute estimated Allan Deviation
             _estimatedAllanDeviation.at(s).at(d).resize(_averagingFactorCount, 0.);
 
             for (size_t k = 0; k < _averagingFactorCount; k++)
             {
-                _estimatedAllanDeviation.at(s).at(d).at(k) = sqrt(_S_N.at(s).at(d) / _averagingTimes.at(k) + _S_K.at(s).at(d) / 3. * _averagingTimes.at(k));
+                _estimatedAllanDeviation.at(s).at(d).at(k) = sqrt(_S_N.at(s).at(d) / _averagingTimes.at(k)
+                                                                  + _S_K.at(s).at(d) / 3. * _averagingTimes.at(k)
+                                                                  + computeCorrelatedNoiseAllanVariance(_S_G.at(s).at(d), _tau_G.at(s).at(d), _averagingTimes.at(k)));
             }
         }
+    }
+}
+
+double NAV::AllanDeviation::computeCorrelatedNoiseAllanVariance(double S_G, double tau_G, double tau)
+{
+    if (S_G == 0. || tau_G == 0.)
+    {
+        return 0;
+    }
+    else
+    {
+        return S_G * tau_G * tau_G / tau * (1 - tau_G / (2 * tau) * (3 - 4 * exp(-tau / tau_G) + exp(-2 * tau / tau_G)));
     }
 }

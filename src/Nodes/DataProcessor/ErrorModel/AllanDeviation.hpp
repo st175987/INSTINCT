@@ -83,6 +83,8 @@ class AllanDeviation : public Node
 
     void estimateNoiseParameters();
 
+    double computeCorrelatedNoiseAllanVariance(double S_G, double tau_G, double tau);
+
     /// sampling interval
     double _samplingInterval;
 
@@ -147,11 +149,15 @@ class AllanDeviation : public Node
     bool _estimateRandomWalk{ false };
     std::array<std::array<double, 3>, 2> _S_K;
 
-    // bool _estimateCorrelatedNoise{ true };
-    // std::array<std::array<double, 3>, 2> _S_G;
-    // std::array<std::array<double, 3>, 2> _tau_G;
+    bool _estimateCorrelatedNoise{ false };
+    std::array<std::array<double, 3>, 2> _S_G;
+    std::array<std::array<double, 3>, 2> _tau_G;
 
-    std::array<std::array<std::vector<double>, 3>, 2> _estimatedAllanDeviation;
+    const double _gamma_tau = 1.8926178136829501;
+    const double _gamma_sigma = 0.4365424710738064;
+
+    std::array<std::array<std::vector<double>, 3>, 2>
+        _estimatedAllanDeviation;
 };
 
 } // namespace NAV
