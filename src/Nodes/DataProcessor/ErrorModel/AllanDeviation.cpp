@@ -536,7 +536,7 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                             unsigned long upper_tau_idx = static_cast<unsigned long>(upper_tau - _averagingTimes.begin());
                             unsigned long idx = (upper_tau_idx == _averagingTimes.size() ? upper_tau_idx - 1 : upper_tau_idx);
 
-                            x_G_0(0) = (_allanVariance.at(s).at(d).at(idx)) / (x_G_0(1) * _gamma_sigma * _gamma_sigma);
+                            x_G_0(0) = (_allanVariance.at(s).at(d).at(idx) - _S_N.at(s).at(d) / _averagingTimes.at(idx_min)) / (x_G_0(1) * _gamma_sigma * _gamma_sigma);
                             if (x_G_0(0) < 0. || x_G_0(1) < 0.)
                             {
                                 x_G_0 = Eigen::Vector2d::Zero();
