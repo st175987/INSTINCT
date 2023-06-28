@@ -143,8 +143,12 @@ class AllanDeviation : public Node
     /// estimation variables
 
     bool _displayEstimation{ false };
+    bool _displayBiasInstability{ false };
 
     std::array<std::array<double, 3>, 2> _S_N;
+
+    std::array<std::array<double, 3>, 2> _biasInstability;
+    std::array<std::array<double, 3>, 2> _biasInstabilityTau;
 
     bool _estimateRandomWalk{ false };
     std::array<std::array<double, 3>, 2> _S_K;

@@ -84,7 +84,14 @@ void NAV::AllanDeviation::guiConfig()
                     ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _allanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     if (_displayEstimation & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(0).at(d).data(), static_cast<int>(_averagingTimes.size()), ImPlotLineFlags_Segments);
+                    }
+                    if (_displayBiasInstability)
+                    {
+                        ImPlot::SetNextMarkerStyle(7, 6, IMPLOT_AUTO_COL, 0.5);
+                        double sigma[1] = { _biasInstability.at(0).at(d) };
+                        double tau[1] = { _biasInstabilityTau.at(0).at(d) };
+                        ImPlot::PlotLine(legendEntries.at(d), tau, sigma, 1);
                     }
                 }
                 ImPlot::EndPlot();
@@ -128,7 +135,14 @@ void NAV::AllanDeviation::guiConfig()
                     ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _allanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
                     if (_displayEstimation & !_averagingTimes.empty())
                     {
-                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()));
+                        ImPlot::PlotLine(legendEntries.at(d), _averagingTimes.data(), _estimatedAllanDeviation.at(1).at(d).data(), static_cast<int>(_averagingTimes.size()), ImPlotLineFlags_Segments);
+                    }
+                    if (_displayBiasInstability)
+                    {
+                        ImPlot::SetNextMarkerStyle(7, 6, IMPLOT_AUTO_COL, 0.5);
+                        double sigma[1] = { _biasInstability.at(1).at(d) };
+                        double tau[1] = { _biasInstabilityTau.at(1).at(d) };
+                        ImPlot::PlotLine(legendEntries.at(d), tau, sigma, 1);
                     }
                 }
                 ImPlot::EndPlot();
@@ -163,10 +177,13 @@ void NAV::AllanDeviation::guiConfig()
             ImGui::EndDisabled();
         ImGui::Checkbox("Compute Allan Deviation last", &_updateLast);
         ImGui::Checkbox("Display Estimation", &_displayEstimation);
+        ImGui::SameLine(200);
+        ImGui::Checkbox("Display Bias Instability", &_displayBiasInstability);
         if (ImGui::TreeNode("Estimation Parameters"))
         {
-            ImGui::Checkbox("Estimate Random Walk", &_estimateRandomWalk);
-            ImGui::Checkbox("Estimate Correlated Noise", &_estimateCorrelatedNoise);
+            ImGui::Checkbox("Random Walk", &_estimateRandomWalk);
+            ImGui::SameLine(200);
+            ImGui::Checkbox("Correlated Noise", &_estimateCorrelatedNoise);
             ImGui::TreePop();
         }
     }
@@ -182,6 +199,7 @@ void NAV::AllanDeviation::guiConfig()
     j["confidenceFillAlpha"] = _confidenceFillAlpha;
     j["updateLast"] = _updateLast;
     j["displayEstimation"] = _displayEstimation;
+    j["displayBiasInstability"] = _displayBiasInstability;
     j["estimateRandomWalk"] = _estimateRandomWalk;
     j["estimateCorrelatedNoise"] = _estimateCorrelatedNoise;
 
@@ -207,6 +225,10 @@ void NAV::AllanDeviation::restore(json const& j)
     if (j.contains("displayEstimation"))
     {
         j.at("displayEstimation").get_to(_displayEstimation);
+    }
+    if (j.contains("displayBiasInstability"))
+    {
+        j.at("displayBiasInstability").get_to(_displayBiasInstability);
     }
     if (j.contains("estimateRandomWalk"))
     {
@@ -243,12 +265,15 @@ bool NAV::AllanDeviation::initialize()
     _imuObsCount = 0;
 
     _averagingFactorCount = 0;
-
     _nextAveragingFactorExponent = 1;
-
     _nextAveragingFactor = 1;
 
     _S_N = std::array<std::array<double, 3>, 2>{};
+    _S_K = std::array<std::array<double, 3>, 2>{};
+    _S_G = std::array<std::array<double, 3>, 2>{};
+    _tau_G = std::array<std::array<double, 3>, 2>{};
+    _biasInstability = std::array<std::array<double, 3>, 2>{};
+    _biasInstabilityTau = std::array<std::array<double, 3>, 2>{};
 
     _estimatedAllanDeviation = std::array<std::array<std::vector<double>, 3>, 2>{};
 
@@ -434,6 +459,26 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                 _S_N.at(s).at(d) = 0;
             }
 
+            // bias instability computation
+
+            if (_averagingFactorCount > _averagingFactorsPerDecade)
+            {
+                auto min_avar = std::min_element(_allanVariance.at(s).at(d).begin(),
+                                                 _allanVariance.at(s).at(d).end() - static_cast<long>(_averagingFactorsPerDecade));
+                unsigned long idx_min = static_cast<unsigned long>(std::distance(std::begin(_allanVariance.at(s).at(d)), min_avar));
+
+                if (_slope.at(s).at(d).at(idx_min) < 0.1 && _slope.at(s).at(d).at(idx_min) > -0.1)
+                {
+                    _biasInstability.at(s).at(d) = _allanDeviation.at(s).at(d).at(idx_min);
+                    _biasInstabilityTau.at(s).at(d) = _averagingTimes.at(idx_min);
+                }
+                else
+                {
+                    _biasInstability.at(s).at(d) = 0.;
+                    _biasInstabilityTau.at(s).at(d) = 0.;
+                }
+            }
+
             // random walk estimation
             if (_estimateRandomWalk)
             {
@@ -523,20 +568,11 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                     }
                     else // compute S_G and tau_G without random walk noise
                     {
-                        if (_averagingFactorCount > _averagingFactorsPerDecade)
+                        if (_averagingFactorCount > _averagingFactorsPerDecade && _biasInstability.at(s).at(d) != 0)
                         {
-                            auto min_avar = std::min_element(_allanVariance.at(s).at(d).begin(),
-                                                             _allanVariance.at(s).at(d).end() - static_cast<long>(_averagingFactorsPerDecade));
-                            unsigned long idx_min = static_cast<unsigned long>(std::distance(std::begin(_allanVariance.at(s).at(d)), min_avar));
+                            x_G_0(1) = _biasInstabilityTau.at(s).at(d) / _gamma_tau;
 
-                            double tau_min = _averagingTimes.at(idx_min) / _gamma_tau;
-                            x_G_0(1) = tau_min / _gamma_tau;
-
-                            auto upper_tau = std::upper_bound(_averagingTimes.begin(), _averagingTimes.end(), tau_min);
-                            unsigned long upper_tau_idx = static_cast<unsigned long>(upper_tau - _averagingTimes.begin());
-                            unsigned long idx = (upper_tau_idx == _averagingTimes.size() ? upper_tau_idx - 1 : upper_tau_idx);
-
-                            x_G_0(0) = (_allanVariance.at(s).at(d).at(idx) - _S_N.at(s).at(d) / _averagingTimes.at(idx_min)) / (x_G_0(1) * _gamma_sigma * _gamma_sigma);
+                            x_G_0(0) = (pow(_biasInstability.at(s).at(d), 2) - _S_N.at(s).at(d) / _biasInstabilityTau.at(s).at(d)) / (x_G_0(1) * _gamma_sigma * _gamma_sigma);
                             if (x_G_0(0) < 0. || x_G_0(1) < 0.)
                             {
                                 x_G_0 = Eigen::Vector2d::Zero();
@@ -595,8 +631,8 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                         } while (max_dx > 1e-10 && iterations < number_of_iterations);
                     }
 
-                    _S_G.at(s).at(d) = x_G_0(0);
-                    _tau_G.at(s).at(d) = x_G_0(1);
+                    _S_G.at(s).at(d) = x_G_0(0) < 0. ? 0. : x_G_0(0);
+                    _tau_G.at(s).at(d) = x_G_0(1) < 0. ? 0. : x_G_0(1);
                 }
                 else
                 {
