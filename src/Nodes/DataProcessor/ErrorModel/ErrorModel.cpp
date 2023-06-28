@@ -126,16 +126,16 @@ void NAV::ErrorModel::guiConfig()
                 ImGui::Indent();
 
                 if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁰ Noise ({})##{}",
-                                                                   _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
-                                                                                                                                  : "Variance",
+                                                                   _imuAccelerometerWhiteNoiseUnit == ImuAccelerometerWhiteNoiseUnits::m_s2 ? "Standard deviation"
+                                                                                                                                            : "Variance",
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuAccelerometerWhiteNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuAccelerometerWhiteNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerWhiteNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
                     LOG_DEBUG("{}: _imuAccelerometerWhiteNoiseInput changed to {}", nameId(), _imuAccelerometerWhiteNoiseInput.transpose());
-                    LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
+                    LOG_DEBUG("{}: _imuAccelerometerWhiteNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerWhiteNoiseUnit));
                     flow::ApplyChanges();
                 }
                 ImGui::SameLine();
@@ -151,16 +151,16 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::EndTooltip();
                 }
                 if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁻² Noise ({})##{}",
-                                                                   _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
-                                                                                                                                  : "Variance",
+                                                                   _imuAccelerometerRandomWalkUnit == ImuAccelerometerRandomWalkUnits::m_s3 ? "Standard deviation"
+                                                                                                                                            : "Variance",
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuAccelerometerRandomWalkInput.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuAccelerometerRandomWalkInput.data(), reinterpret_cast<int*>(&_imuAccelerometerRandomWalkUnit), "m/s^3\0m^2/s^6\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
                     LOG_DEBUG("{}: _imuAccelerometerRandomWalkInput changed to {}", nameId(), _imuAccelerometerRandomWalkInput.transpose());
-                    LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
+                    LOG_DEBUG("{}: _imuAccelerometerRandomWalkUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerRandomWalkUnit));
                     flow::ApplyChanges();
                 }
                 ImGui::SameLine();
@@ -174,17 +174,14 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise ({})##{}",
-                                                                   _imuAccelerometerNoiseUnit == ImuAccelerometerNoiseUnits::m_s2 ? "Standard deviation"
-                                                                                                                                  : "Variance",
-                                                                   size_t(id))
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise Amplitude ##{}", size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuAccelerometerCorrelatedNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerNoiseUnit), "m/s^2\0m^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuAccelerometerCorrelatedNoiseInput.data(), reinterpret_cast<int*>(&_imuAccelerometerCorrelatedNoiseUnit), "m^2/s^5\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
                     LOG_DEBUG("{}: _imuAccelerometerCorrelatedNoiseInput changed to {}", nameId(), _imuAccelerometerCorrelatedNoiseInput.transpose());
-                    LOG_DEBUG("{}: _imuAccelerometerNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerNoiseUnit));
+                    LOG_DEBUG("{}: _imuAccelerometerCorrelatedNoiseUnit changed to {}", nameId(), fmt::underlying(_imuAccelerometerCorrelatedNoiseUnit));
                     flow::ApplyChanges();
                 }
                 ImGui::SameLine();
@@ -193,7 +190,7 @@ void NAV::ErrorModel::guiConfig()
                 {
                     ImGui::BeginTooltip();
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-                    ImGui::TextUnformatted("Standard deviation/Variance of Correlated Noise\n"
+                    ImGui::TextUnformatted("Noise Amplitude of Correlated Noise\n"
                                            "Also called 1st order Gauss-Markov process.");
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
@@ -263,18 +260,18 @@ void NAV::ErrorModel::guiConfig()
                 float currentCursorX = ImGui::GetCursorPosX();
 
                 if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁰ Noise ({})##{}",
-                                                                   _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
-                                                                           || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
+                                                                   _imuGyroscopeWhiteNoiseUnit == ImuGyroscopeWhiteNoiseUnits::rad_s
+                                                                           || _imuGyroscopeWhiteNoiseUnit == ImuGyroscopeWhiteNoiseUnits::deg_s
                                                                        ? "Standard deviation"
                                                                        : "Variance",
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuGyroscopeWhiteNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuGyroscopeWhiteNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeWhiteNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
                     LOG_DEBUG("{}: _imuGyroscopeWhiteNoiseInput changed to {}", nameId(), _imuGyroscopeWhiteNoiseInput.transpose());
-                    LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
+                    LOG_DEBUG("{}: _imuGyroscopeWhiteNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeWhiteNoiseUnit));
                     flow::ApplyChanges();
                 }
                 ImGui::SameLine();
@@ -290,18 +287,18 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::EndTooltip();
                 }
                 if (gui::widgets::InputDouble3WithUnit(fmt::format("f⁻² Noise ({})##{}",
-                                                                   _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
-                                                                           || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
+                                                                   _imuGyroscopeRandomWalkUnit == ImuGyroscopeRandomWalkUnits::rad_s2
+                                                                           || _imuGyroscopeRandomWalkUnit == ImuGyroscopeRandomWalkUnits::deg_s2
                                                                        ? "Standard deviation"
                                                                        : "Variance",
                                                                    size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuGyroscopeRandomWalkInput.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuGyroscopeRandomWalkInput.data(), reinterpret_cast<int*>(&_imuGyroscopeRandomWalkUnit), "rad/s^2\0deg/s^2\0rad^2/s^4\0deg^2/s^4\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
                     LOG_DEBUG("{}: _imuGyroscopeRandomWalkInput changed to {}", nameId(), _imuGyroscopeRandomWalkInput.transpose());
-                    LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
+                    LOG_DEBUG("{}: _imuGyroscopeRandomWalkUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeRandomWalkUnit));
                     flow::ApplyChanges();
                 }
                 ImGui::SameLine();
@@ -315,19 +312,14 @@ void NAV::ErrorModel::guiConfig()
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
                 }
-                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise ({})##{}",
-                                                                   _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::rad_s
-                                                                           || _imuGyroscopeNoiseUnit == ImuGyroscopeNoiseUnits::deg_s
-                                                                       ? "Standard deviation"
-                                                                       : "Variance",
-                                                                   size_t(id))
+                if (gui::widgets::InputDouble3WithUnit(fmt::format("Correlated Noise Amplitude ##{}", size_t(id))
                                                            .c_str(),
                                                        itemWidth, unitWidth,
-                                                       _imuGyroscopeCorrelatedNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeNoiseUnit), "rad/s\0deg/s\0rad^2/s^2\0deg^2/s^2\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
+                                                       _imuGyroscopeCorrelatedNoiseInput.data(), reinterpret_cast<int*>(&_imuGyroscopeCorrelatedNoiseUnit), "rad^2/s^3\0deg^2/s^3\0\0", // NOLINT(hicpp-avoid-c-arrays,modernize-avoid-c-arrays,cppcoreguidelines-avoid-c-arrays)
                                                        "%.2e", ImGuiInputTextFlags_CharsScientific))
                 {
                     LOG_DEBUG("{}: _imuGyroscopeCorrelatedNoiseInput changed to {}", nameId(), _imuGyroscopeCorrelatedNoiseInput.transpose());
-                    LOG_DEBUG("{}: _imuGyroscopeNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeNoiseUnit));
+                    LOG_DEBUG("{}: _imuGyroscopeCorrelatedNoiseUnit changed to {}", nameId(), fmt::underlying(_imuGyroscopeCorrelatedNoiseUnit));
                     flow::ApplyChanges();
                 }
                 ImGui::SameLine();
@@ -336,7 +328,7 @@ void NAV::ErrorModel::guiConfig()
                 {
                     ImGui::BeginTooltip();
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-                    ImGui::TextUnformatted("Standard deviation/Variance of Correlated Noise\n"
+                    ImGui::TextUnformatted("Noise Amplitude of Correlated Noise\n"
                                            "Also called 1st order Gauss-Markov process.");
                     ImGui::PopTextWrapPos();
                     ImGui::EndTooltip();
@@ -558,16 +550,20 @@ json NAV::ErrorModel::save() const
     j["imuGyroscopeBiasUnit"] = _imuGyroscopeBiasUnit;
     j["imuGyroscopeBias_p"] = _imuGyroscopeBias_p;
 
-    j["imuAccelerometerNoiseUnit"] = _imuAccelerometerNoiseUnit;
+    j["imuAccelerometerNoiseUnit"] = _imuAccelerometerWhiteNoiseUnit;
     j["imuAccelerometerWhiteNoise"] = _imuAccelerometerWhiteNoiseInput;
+    j["imuAccelerometerRandomWalkUnit"] = _imuAccelerometerRandomWalkUnit;
     j["imuAccelerometerRandomWalk"] = _imuAccelerometerRandomWalkInput;
+    j["imuAccelerometerCorrelatedNoiseUnit"] = _imuAccelerometerCorrelatedNoiseUnit;
     j["imuAccelerometerCorrelatedNoise"] = _imuAccelerometerCorrelatedNoiseInput;
     j["imuAccelerometerCorrelatedNoiseCorrelationTime"] = _imuAccelerometerCorrelatedNoiseCorrelationTime;
     j["imuAccelerometerCorrelationTimeUnit"] = _imuAccelerometerCorrelationTimeUnit;
     j["imuAccelerometerRandomNumberGenerator"] = _imuAccelerometerRandomNumberGenerator;
-    j["imuGyroscopeNoiseUnit"] = _imuGyroscopeNoiseUnit;
+    j["imuGyroscopeNoiseUnit"] = _imuGyroscopeWhiteNoiseUnit;
     j["imuGyroscopeWhiteNoise"] = _imuGyroscopeWhiteNoiseInput;
+    j["imuGyroscopeRandomWalkUnit"] = _imuGyroscopeRandomWalkUnit;
     j["imuGyroscopeRandomWalk"] = _imuGyroscopeRandomWalkInput;
+    j["imuGyroscopeCorrelatedNoiseUnit"] = _imuGyroscopeCorrelatedNoiseUnit;
     j["imuGyroscopeCorrelatedNoise"] = _imuGyroscopeCorrelatedNoiseInput;
     j["imuGyroscopeCorrelatedNoiseCorrelationTime"] = _imuGyroscopeCorrelatedNoiseCorrelationTime;
     j["imuGyroscopeCorrelationTimeUnit"] = _imuGyroscopeCorrelationTimeUnit;
@@ -616,15 +612,23 @@ void NAV::ErrorModel::restore(json const& j)
 
     if (j.contains("imuAccelerometerNoiseUnit"))
     {
-        j.at("imuAccelerometerNoiseUnit").get_to(_imuAccelerometerNoiseUnit);
+        j.at("imuAccelerometerNoiseUnit").get_to(_imuAccelerometerWhiteNoiseUnit);
     }
     if (j.contains("imuAccelerometerWhiteNoise"))
     {
         j.at("imuAccelerometerWhiteNoise").get_to(_imuAccelerometerWhiteNoiseInput);
     }
+    if (j.contains("imuAccelerometerRandomWalkUnit"))
+    {
+        j.at("imuAccelerometerRandomWalkUnit").get_to(_imuAccelerometerRandomWalkUnit);
+    }
     if (j.contains("imuAccelerometerRandomWalk"))
     {
         j.at("imuAccelerometerRandomWalk").get_to(_imuAccelerometerRandomWalkInput);
+    }
+    if (j.contains("imuAccelerometerCorrelatedNoiseUnit"))
+    {
+        j.at("imuAccelerometerCorrelatedNoiseUnit").get_to(_imuAccelerometerCorrelatedNoiseUnit);
     }
     if (j.contains("imuAccelerometerCorrelatedNoise"))
     {
@@ -644,15 +648,23 @@ void NAV::ErrorModel::restore(json const& j)
     }
     if (j.contains("imuGyroscopeNoiseUnit"))
     {
-        j.at("imuGyroscopeNoiseUnit").get_to(_imuGyroscopeNoiseUnit);
+        j.at("imuGyroscopeNoiseUnit").get_to(_imuGyroscopeWhiteNoiseUnit);
     }
     if (j.contains("imuGyroscopeWhiteNoise"))
     {
         j.at("imuGyroscopeWhiteNoise").get_to(_imuGyroscopeWhiteNoiseInput);
     }
+    if (j.contains("imuGyroscopeRandomWalkUnit"))
+    {
+        j.at("imuGyroscopeRandomWalkUnit").get_to(_imuGyroscopeRandomWalkUnit);
+    }
     if (j.contains("imuGyroscopeRandomWalk"))
     {
         j.at("imuGyroscopeRandomWalk").get_to(_imuGyroscopeRandomWalkInput);
+    }
+    if (j.contains("imuGyroscopeCorrelatedNoiseUnit"))
+    {
+        j.at("imuGyroscopeCorrelatedNoiseUnit").get_to(_imuGyroscopeCorrelatedNoiseUnit);
     }
     if (j.contains("imuGyroscopeCorrelatedNoise"))
     {
@@ -884,22 +896,29 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
     Eigen::Vector3d accelerometerNoiseStd = Eigen::Vector3d::Zero();
     Eigen::Vector3d accelerometerRandomWalkStd = Eigen::Vector3d::Zero();
     Eigen::Vector3d accelerometerCorrelatedNoiseStd = Eigen::Vector3d::Zero();
-    switch (_imuAccelerometerNoiseUnit)
+    switch (_imuAccelerometerWhiteNoiseUnit)
     {
-    case ImuAccelerometerNoiseUnits::m_s2:
+    case ImuAccelerometerWhiteNoiseUnits::m_s2:
         accelerometerNoiseStd = _imuAccelerometerWhiteNoiseInput;
-        accelerometerRandomWalkStd = _imuAccelerometerRandomWalkInput;
-        accelerometerCorrelatedNoiseStd = _imuAccelerometerCorrelatedNoiseInput;
         break;
-    case ImuAccelerometerNoiseUnits::m2_s4:
+    case ImuAccelerometerWhiteNoiseUnits::m2_s4:
         accelerometerNoiseStd = _imuAccelerometerWhiteNoiseInput.cwiseSqrt();
-        accelerometerRandomWalkStd = _imuAccelerometerRandomWalkInput.cwiseSqrt();
-        accelerometerCorrelatedNoiseStd = _imuAccelerometerCorrelatedNoiseInput.cwiseSqrt();
         break;
     }
+    switch (_imuAccelerometerRandomWalkUnit)
+    {
+    case ImuAccelerometerRandomWalkUnits::m_s3:
+        accelerometerRandomWalkStd = _imuAccelerometerRandomWalkInput;
+        break;
+    case ImuAccelerometerRandomWalkUnits::m2_s6:
+        accelerometerRandomWalkStd = _imuAccelerometerRandomWalkInput.cwiseSqrt();
+        break;
+    }
+    accelerometerCorrelatedNoiseStd = ((_dt == 0. ? 0. : 1. / _dt) * _imuAccelerometerCorrelatedNoiseInput).cwiseSqrt();
+
     LOG_DATA("{}: accelerometerNoiseStd = {} [m/s^2]", nameId(), accelerometerNoiseStd.transpose());
-    LOG_DATA("{}: accelerometerRandomWalkStd = {} [m/s^2]", nameId(), accelerometerRandomWalkStd.transpose());
-    LOG_DATA("{}: accelerometerCorrelatedNoiseStd = {} [m/s^2]", nameId(), accelerometerCorrelatedNoiseStd.transpose());
+    LOG_DATA("{}: accelerometerRandomWalkStd = {} [m/s^3]", nameId(), accelerometerRandomWalkStd.transpose());
+    LOG_DATA("{}: accelerometerCorrelatedNoiseStd = {} [m/s^3]", nameId(), accelerometerCorrelatedNoiseStd.transpose());
 
     LOG_DATA("{}: accelerometerCorrelatedNoiseCorrelationTime = {} [s]", nameId(), _imuAccelerometerCorrelatedNoiseCorrelationTime.transpose());
 
@@ -913,29 +932,46 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
     Eigen::Vector3d gyroscopeNoiseStd = Eigen::Vector3d::Zero();
     Eigen::Vector3d gyroscopeRandomWalkStd = Eigen::Vector3d::Zero();
     Eigen::Vector3d gyroscopeCorrelatedNoiseStd = Eigen::Vector3d::Zero();
-    switch (_imuGyroscopeNoiseUnit)
+    switch (_imuGyroscopeWhiteNoiseUnit)
     {
-    case ImuGyroscopeNoiseUnits::rad_s:
+    case ImuGyroscopeWhiteNoiseUnits::rad_s:
         gyroscopeNoiseStd = _imuGyroscopeWhiteNoiseInput;
-        gyroscopeRandomWalkStd = _imuGyroscopeRandomWalkInput;
-        gyroscopeCorrelatedNoiseStd = _imuGyroscopeCorrelatedNoiseInput;
         break;
-    case ImuGyroscopeNoiseUnits::deg_s:
+    case ImuGyroscopeWhiteNoiseUnits::deg_s:
         gyroscopeNoiseStd = deg2rad(_imuGyroscopeWhiteNoiseInput);
-        gyroscopeRandomWalkStd = deg2rad(_imuGyroscopeRandomWalkInput);
-        gyroscopeCorrelatedNoiseStd = deg2rad(_imuGyroscopeCorrelatedNoiseInput);
         break;
-    case ImuGyroscopeNoiseUnits::rad2_s2:
+    case ImuGyroscopeWhiteNoiseUnits::rad2_s2:
         gyroscopeNoiseStd = _imuGyroscopeWhiteNoiseInput.cwiseSqrt();
-        gyroscopeRandomWalkStd = _imuGyroscopeRandomWalkInput.cwiseSqrt();
-        gyroscopeCorrelatedNoiseStd = _imuGyroscopeCorrelatedNoiseInput.cwiseSqrt();
         break;
-    case ImuGyroscopeNoiseUnits::deg2_s2:
+    case ImuGyroscopeWhiteNoiseUnits::deg2_s2:
         gyroscopeNoiseStd = deg2rad(_imuGyroscopeWhiteNoiseInput.cwiseSqrt());
-        gyroscopeRandomWalkStd = deg2rad(_imuGyroscopeRandomWalkInput.cwiseSqrt());
-        gyroscopeCorrelatedNoiseStd = deg2rad(_imuGyroscopeCorrelatedNoiseInput.cwiseSqrt());
         break;
     }
+    switch (_imuGyroscopeRandomWalkUnit)
+    {
+    case ImuGyroscopeRandomWalkUnits::rad_s2:
+        gyroscopeRandomWalkStd = _imuGyroscopeRandomWalkInput;
+        break;
+    case ImuGyroscopeRandomWalkUnits::deg_s2:
+        gyroscopeRandomWalkStd = deg2rad(_imuGyroscopeRandomWalkInput);
+        break;
+    case ImuGyroscopeRandomWalkUnits::rad2_s4:
+        gyroscopeRandomWalkStd = _imuGyroscopeRandomWalkInput.cwiseSqrt();
+        break;
+    case ImuGyroscopeRandomWalkUnits::deg2_s4:
+        gyroscopeRandomWalkStd = deg2rad(_imuGyroscopeRandomWalkInput.cwiseSqrt());
+        break;
+    }
+    switch (_imuGyroscopeCorrelatedNoiseUnit)
+    {
+    case ImuGyroscopeCorrelatedNoiseUnits::rad2_s3:
+        gyroscopeCorrelatedNoiseStd = ((_dt == 0. ? 0. : 1. / _dt) * _imuGyroscopeCorrelatedNoiseInput).cwiseSqrt();
+        break;
+    case ImuGyroscopeCorrelatedNoiseUnits::deg2_s3:
+        gyroscopeCorrelatedNoiseStd = ((_dt == 0. ? 0. : 1. / _dt) * (_imuGyroscopeCorrelatedNoiseInput * pow(std::numbers::pi_v<double> / 180.0, 2))).cwiseSqrt();
+        break;
+    }
+
     LOG_DATA("{}: gyroscopeNoiseStd = {} [rad/s]", nameId(), gyroscopeNoiseStd.transpose());
     LOG_DATA("{}: gyroscopeRandomWalkStd = {} [rad/s]", nameId(), gyroscopeRandomWalkStd.transpose());
     LOG_DATA("{}: gyroscopeCorrelatedNoiseStd = {} [rad/s]", nameId(), gyroscopeCorrelatedNoiseStd.transpose());
@@ -950,24 +986,24 @@ void NAV::ErrorModel::receiveImuObs(const std::shared_ptr<ImuObs>& imuObs)
 
     // #########################################################################################################################################
 
-    _imuAccelerometerRandomWalk += sqrt(_dt)
+    _imuAccelerometerRandomWalk += _dt
                                    * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerRandomWalkStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                       std::normal_distribution<double>{ 0.0, accelerometerRandomWalkStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                       std::normal_distribution<double>{ 0.0, accelerometerRandomWalkStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
 
-    _imuGyroscopeRandomWalk += sqrt(_dt)
+    _imuGyroscopeRandomWalk += _dt
                                * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeRandomWalkStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                   std::normal_distribution<double>{ 0.0, gyroscopeRandomWalkStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                   std::normal_distribution<double>{ 0.0, gyroscopeRandomWalkStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };
 
     _imuAccelerometerCorrelatedNoise = (_imuAccelerometerCorrelatedNoise.array() * accelerometerCorrelatedNoiseMultiplicationFactor).matrix()
-                                       + sqrt(_dt)
+                                       + _dt
                                              * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, accelerometerCorrelatedNoiseStd(0) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                                 std::normal_distribution<double>{ 0.0, accelerometerCorrelatedNoiseStd(1) }(_imuAccelerometerRandomNumberGenerator.generator),
                                                                 std::normal_distribution<double>{ 0.0, accelerometerCorrelatedNoiseStd(2) }(_imuAccelerometerRandomNumberGenerator.generator) };
 
     _imuGyroscopeCorrelatedNoise = (_imuGyroscopeCorrelatedNoise.array() * gyroscopeCorrelatedNoiseMultiplicationFactor).matrix()
-                                   + sqrt(_dt)
+                                   + _dt
                                          * Eigen::Vector3d{ std::normal_distribution<double>{ 0.0, gyroscopeCorrelatedNoiseStd(0) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                             std::normal_distribution<double>{ 0.0, gyroscopeCorrelatedNoiseStd(1) }(_imuGyroscopeRandomNumberGenerator.generator),
                                                             std::normal_distribution<double>{ 0.0, gyroscopeCorrelatedNoiseStd(2) }(_imuGyroscopeRandomNumberGenerator.generator) };

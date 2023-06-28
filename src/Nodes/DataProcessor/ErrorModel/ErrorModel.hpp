@@ -136,11 +136,24 @@ class ErrorModel : public Node
 
     // ---------------------------------------------------------------- Noise ------------------------------------------------------------------
 
-    /// Possible units to specify an accelerometer noise with
-    enum class ImuAccelerometerNoiseUnits
+    /// Possible units to specify an accelerometer white noise with
+    enum class ImuAccelerometerWhiteNoiseUnits
     {
         m_s2,  ///< [m/s^2] (Standard deviation)
         m2_s4, ///< [m^2/s^4] (Variance)
+    };
+
+    /// Possible units to specify an accelerometer random walk noise with
+    enum class ImuAccelerometerRandomWalkUnits
+    {
+        m_s3,  ///< [m/s^3] (Standard deviation)
+        m2_s6, ///< [m^2/s^6] (Variance)
+    };
+
+    /// Possible units to specify an accelerometer correlated noise amplitude with
+    enum class ImuAccelerometerCorrelatedNoiseUnits
+    {
+        m2_s5, ///< [m^2/s^5]
     };
 
     /// Possible units to specify correlation time of correlated noise
@@ -149,8 +162,14 @@ class ErrorModel : public Node
         s, ///< [s]
     };
 
-    /// Selected unit for the accelerometer noise in the GUI
-    ImuAccelerometerNoiseUnits _imuAccelerometerNoiseUnit = ImuAccelerometerNoiseUnits::m_s2;
+    /// Selected unit for the accelerometer white noise in the GUI
+    ImuAccelerometerWhiteNoiseUnits _imuAccelerometerWhiteNoiseUnit = ImuAccelerometerWhiteNoiseUnits::m_s2;
+
+    /// Selected unit for the accelerometer random walk noise in the GUI
+    ImuAccelerometerRandomWalkUnits _imuAccelerometerRandomWalkUnit = ImuAccelerometerRandomWalkUnits::m_s3;
+
+    /// Selected unit for the accelerometer correlated noise correlation time in the GUI
+    ImuAccelerometerCorrelatedNoiseUnits _imuAccelerometerCorrelatedNoiseUnit = ImuAccelerometerCorrelatedNoiseUnits::m2_s5;
 
     /// Selected unit for the accelerometer correlated noise correlation time in the GUI
     ImuAccelerometerCorrelationTimeUnits _imuAccelerometerCorrelationTimeUnit = ImuAccelerometerCorrelationTimeUnits::s;
@@ -170,13 +189,29 @@ class ErrorModel : public Node
     /// Random number generator for the accelerometer noise
     RandomNumberGenerator _imuAccelerometerRandomNumberGenerator;
 
-    /// Possible units to specify an gyroscope noise with
-    enum class ImuGyroscopeNoiseUnits
+    /// Possible units to specify a gyroscope white noise with
+    enum class ImuGyroscopeWhiteNoiseUnits
     {
         rad_s,   ///< [rad/s] (Standard deviation)
         deg_s,   ///< [deg/s] (Standard deviation)
         rad2_s2, ///< [rad^2/s^2] (Variance)
         deg2_s2, ///< [deg^2/s^2] (Variance)
+    };
+
+    /// Possible units to specify a gyroscope random walk noise with
+    enum class ImuGyroscopeRandomWalkUnits
+    {
+        rad_s2,  ///< [rad/s^2] (Standard deviation)
+        deg_s2,  ///< [deg/s^2] (Standard deviation)
+        rad2_s4, ///< [rad^2/s^4] (Variance)
+        deg2_s4, ///< [deg^2/s^4] (Variance)
+    };
+
+    /// Possible units to specify a gyroscope correlated noise amplitude with
+    enum class ImuGyroscopeCorrelatedNoiseUnits
+    {
+        rad2_s3, ///< [rad^2/s^3]
+        deg2_s3, ///< [deg^2/s^3]
     };
 
     /// Possible units to specify correlation time of correlated noise
@@ -185,8 +220,14 @@ class ErrorModel : public Node
         s, ///< [s]
     };
 
-    /// Selected unit for the gyroscope noise in the GUI
-    ImuGyroscopeNoiseUnits _imuGyroscopeNoiseUnit = ImuGyroscopeNoiseUnits::rad_s;
+    /// Selected unit for the gyroscope white noise in the GUI
+    ImuGyroscopeWhiteNoiseUnits _imuGyroscopeWhiteNoiseUnit = ImuGyroscopeWhiteNoiseUnits::rad_s;
+
+    /// Selected unit for the gyroscope random walk noise in the GUI
+    ImuGyroscopeRandomWalkUnits _imuGyroscopeRandomWalkUnit = ImuGyroscopeRandomWalkUnits::rad_s2;
+
+    /// Selected unit for the gyroscope correlated noise correlation time in the GUI
+    ImuGyroscopeCorrelatedNoiseUnits _imuGyroscopeCorrelatedNoiseUnit = ImuGyroscopeCorrelatedNoiseUnits::rad2_s3;
 
     /// Selected unit for the gyroscope correlated noise correlation time in the GUI
     ImuGyroscopeCorrelationTimeUnits _imuGyroscopeCorrelationTimeUnit = ImuGyroscopeCorrelationTimeUnits::s;
