@@ -30,9 +30,9 @@ NAV::AllanDeviation::AllanDeviation()
 
     _hasConfig = true;
     _lockConfigDuringRun = false;
-    _guiConfigDefaultWindowSize = { 630, 410 };
+    _guiConfigDefaultWindowSize = { 630, 530 };
 
-    nm::CreateOutputPin(this, "Object", Pin::Type::Object, { "AdevOutput" }, &_valueObject);
+    nm::CreateOutputPin(this, "AdevOutput", Pin::Type::Flow, { AdevOutput::type() });
 
     nm::CreateInputPin(this, "ImuObs", Pin::Type::Flow, { NAV::ImuObs::type() }, &AllanDeviation::receiveImuObs);
 }
@@ -388,7 +388,36 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         estimateNoiseParameters();
     }
 
-    notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
+    // TODO: Delete this!
+    // set all estimated parameters to nan for first observation
+    if (obs->insTime == _startingInsTime)
+    {
+        for (size_t s = 0; s < 2; s++)
+        {
+            for (size_t d = 0; d < 3; d++)
+            {
+                _S_N.at(s).at(d) *= std::nan("");
+                _biasInstability.at(s).at(d) *= std::nan("");
+                _biasInstabilityTau.at(s).at(d) *= std::nan("");
+                if (_estimateRandomWalk)
+                {
+                    _S_K.at(s).at(d) *= std::nan("");
+                }
+                if (_estimateCorrelatedNoise)
+                {
+                    _S_G.at(s).at(d) *= std::nan("");
+                    _tau_G.at(s).at(d) *= std::nan("");
+                }
+            }
+        }
+    }
+
+    auto adevOutput = std::make_shared<AdevOutput>();
+    adevOutput->insTime = obs->insTime;
+    prepareAdevOutput(adevOutput);
+
+    // notifyOutputValueChanged(OUTPUT_PORT_INDEX_ADEV_OUTPUT, obs->insTime); // TODO: lock thread when modifying output value
+    invokeCallbacks(OUTPUT_PORT_INDEX_ADEV_OUTPUT, adevOutput);
 }
 
 void NAV::AllanDeviation::computeSlopes()
@@ -452,7 +481,7 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                 Eigen::VectorXd x_N;
 
                 x_N = (A_N.transpose() * p_N.asDiagonal() * A_N).inverse() * A_N.transpose() * p_N.asDiagonal() * y_N;
-                _S_N.at(s).at(d) = x_N(0);
+                _S_N.at(s).at(d) = x_N(0) < 0. ? 0. : x_N(0);
             }
             else
             {
@@ -510,7 +539,7 @@ void NAV::AllanDeviation::estimateNoiseParameters()
                     Eigen::VectorXd x_K;
 
                     x_K = (A_K.transpose() * p_K.asDiagonal() * A_K).inverse() * A_K.transpose() * p_K.asDiagonal() * y_K;
-                    _S_K.at(s).at(d) = x_K(0);
+                    _S_K.at(s).at(d) = x_K(0) < 0. ? 0. : x_K(0);
                 }
                 else
                 {
@@ -668,5 +697,32 @@ double NAV::AllanDeviation::computeCorrelatedNoiseAllanVariance(double S_G, doub
     else
     {
         return S_G * tau_G * tau_G / tau * (1 - tau_G / (2 * tau) * (3 - 4 * exp(-tau / tau_G) + exp(-2 * tau / tau_G)));
+    }
+}
+
+void NAV::AllanDeviation::prepareAdevOutput(std::shared_ptr<AdevOutput> adevOutput)
+{
+    adevOutput->accelWhiteNoiseCoefficient = Eigen::Map<Eigen::Vector3d>(_S_N.at(0).data());
+    adevOutput->accelBiasInstability = Eigen::Map<Eigen::Vector3d>(_biasInstability.at(0).data());
+    adevOutput->accelBiasInstabilityTau = Eigen::Map<Eigen::Vector3d>(_biasInstabilityTau.at(0).data());
+
+    adevOutput->gyroWhiteNoiseCoefficient = Eigen::Map<Eigen::Vector3d>(_S_N.at(1).data());
+    adevOutput->gyroBiasInstability = Eigen::Map<Eigen::Vector3d>(_biasInstability.at(1).data());
+    adevOutput->gyroBiasInstabilityTau = Eigen::Map<Eigen::Vector3d>(_biasInstabilityTau.at(1).data());
+
+    if (_estimateRandomWalk)
+    {
+        adevOutput->accelRandomWalkCoefficient = Eigen::Map<Eigen::Vector3d>(_S_K.at(0).data());
+
+        adevOutput->gyroRandomWalkCoefficient = Eigen::Map<Eigen::Vector3d>(_S_K.at(1).data());
+    }
+
+    if (_estimateCorrelatedNoise)
+    {
+        adevOutput->accelCorrelatedNoiseAmplitude = Eigen::Map<Eigen::Vector3d>(_S_G.at(0).data());
+        adevOutput->accelCorrelatedNoiseCorrelationTime = Eigen::Map<Eigen::Vector3d>(_tau_G.at(0).data());
+
+        adevOutput->gyroCorrelatedNoiseAmplitude = Eigen::Map<Eigen::Vector3d>(_S_G.at(1).data());
+        adevOutput->gyroCorrelatedNoiseCorrelationTime = Eigen::Map<Eigen::Vector3d>(_tau_G.at(1).data());
     }
 }

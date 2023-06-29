@@ -15,6 +15,8 @@
 
 #include "internal/Node/Node.hpp"
 
+#include "NodeData/IMU/AdevOutput.hpp"
+
 #include "implot.h"
 
 #include "util/Eigen.hpp"
@@ -74,8 +76,7 @@ class AllanDeviation : public Node
     /// @param[in] queue Queue with all the received data messages
     /// @param[in] pinIdx Index of the pin the data is received on
     void receiveImuObs(InputPin::NodeDataQueue& queue, size_t pinIdx);
-
-    int _valueObject; ///< Value which is represented over the Object pin
+    
 
     // ------------------------------------------------------------ Algorithm --------------------------------------------------------------
 
@@ -84,6 +85,8 @@ class AllanDeviation : public Node
     void estimateNoiseParameters();
 
     double computeCorrelatedNoiseAllanVariance(double S_G, double tau_G, double tau);
+
+    void prepareAdevOutput(std::shared_ptr<AdevOutput> adevOutput);
 
     /// sampling interval
     double _samplingInterval;
