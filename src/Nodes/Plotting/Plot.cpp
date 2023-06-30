@@ -1935,12 +1935,6 @@ void NAV::Plot::afterCreateLink(OutputPin& startPin, InputPin& endPin)
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel White Noise Coefficient X [m^2/s^3]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel White Noise Coefficient Y [m^2/s^3]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel White Noise Coefficient Z [m^2/s^3]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability X [m/s^2]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Y [m/s^2]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Z [m/s^2]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Tau X [s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Tau Y [s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Tau Z [s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Random Walk Coefficient X [m^2/s^5]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Random Walk Coefficient Y [m^2/s^5]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Random Walk Coefficient Z [m^2/s^5]");
@@ -1950,15 +1944,15 @@ void NAV::Plot::afterCreateLink(OutputPin& startPin, InputPin& endPin)
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Correlated Noise Correlation Time X [s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Correlated Noise Correlation Time Y [s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Correlated Noise Correlation Time Z [s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability X [m/s^2]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Y [m/s^2]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Z [m/s^2]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Tau X [s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Tau Y [s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Accel Bias Instability Tau Z [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel N² X [m²/s³]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel N² Y [m²/s³]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel N² Z [m²/s³]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b X [m/s²]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b Y [m/s²]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b Z [m/s²]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_b X [s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_b Y [s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_b Z [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel K² X [m²/s⁵]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel K² Y [m²/s⁵]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel K² Z [m²/s⁵]");
@@ -1968,16 +1962,16 @@ void NAV::Plot::afterCreateLink(OutputPin& startPin, InputPin& endPin)
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Time X [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Time Y [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Z [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b X [m/s²]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b Y [m/s²]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b Z [m/s²]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_b X [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_b Y [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_b Z [s]");
             // AdevOutput Accelerometer
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro White Noise Coefficient X [rad^2/s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro White Noise Coefficient Y [rad^2/s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro White Noise Coefficient Z [rad^2/s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability X [rad/s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Y [rad/s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Z [rad/s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Tau X [s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Tau Y [s]");
-            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Tau Z [s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Random Walk Coefficient X [rad^2/s^3]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Random Walk Coefficient Y [rad^2/s^3]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Random Walk Coefficient Z [rad^2/s^3]");
@@ -1987,15 +1981,15 @@ void NAV::Plot::afterCreateLink(OutputPin& startPin, InputPin& endPin)
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Correlated Noise Correlation Time X [s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Correlated Noise Correlation Time Y [s]");
             // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Correlated Noise Correlation Time Z [s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability X [rad/s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Y [rad/s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Z [rad/s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Tau X [s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Tau Y [s]");
+            // _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro Bias Instability Tau Z [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro N² X [rad²/s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro N² Y [rad²/s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro N² Z [rad²/s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro σ_b X [rad/s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro σ_b Y [rad/s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro σ_b Z [rad/s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_b X [s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_b Y [s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_b Z [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro K² X [rad²/s³]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro K² Y [rad²/s³]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro K² Z [rad²/s³]");
@@ -2005,6 +1999,12 @@ void NAV::Plot::afterCreateLink(OutputPin& startPin, InputPin& endPin)
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_G X [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_G Y [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_G Z [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro σ_b X [rad/s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro σ_b Y [rad/s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro σ_b Z [rad/s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_b X [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_b Y [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Gyro τ_b Z [s]");
         }
     }
     else if (inputPins.at(pinIndex).type == Pin::Type::Bool)
@@ -3145,12 +3145,6 @@ void NAV::Plot::plotAdevOutput(const std::shared_ptr<const AdevOutput>& obs, siz
     addData(pinIndex, i++, obs->accelWhiteNoiseCoefficient.has_value() ? obs->accelWhiteNoiseCoefficient->x() : std::nan(""));
     addData(pinIndex, i++, obs->accelWhiteNoiseCoefficient.has_value() ? obs->accelWhiteNoiseCoefficient->y() : std::nan(""));
     addData(pinIndex, i++, obs->accelWhiteNoiseCoefficient.has_value() ? obs->accelWhiteNoiseCoefficient->z() : std::nan(""));
-    addData(pinIndex, i++, obs->accelBiasInstability.has_value() ? obs->accelBiasInstability->x() : std::nan(""));
-    addData(pinIndex, i++, obs->accelBiasInstability.has_value() ? obs->accelBiasInstability->y() : std::nan(""));
-    addData(pinIndex, i++, obs->accelBiasInstability.has_value() ? obs->accelBiasInstability->z() : std::nan(""));
-    addData(pinIndex, i++, obs->accelBiasInstabilityTau.has_value() ? obs->accelBiasInstabilityTau->x() : std::nan(""));
-    addData(pinIndex, i++, obs->accelBiasInstabilityTau.has_value() ? obs->accelBiasInstabilityTau->y() : std::nan(""));
-    addData(pinIndex, i++, obs->accelBiasInstabilityTau.has_value() ? obs->accelBiasInstabilityTau->z() : std::nan(""));
     addData(pinIndex, i++, obs->accelRandomWalkCoefficient.has_value() ? obs->accelRandomWalkCoefficient->x() : std::nan(""));
     addData(pinIndex, i++, obs->accelRandomWalkCoefficient.has_value() ? obs->accelRandomWalkCoefficient->y() : std::nan(""));
     addData(pinIndex, i++, obs->accelRandomWalkCoefficient.has_value() ? obs->accelRandomWalkCoefficient->z() : std::nan(""));
@@ -3160,16 +3154,16 @@ void NAV::Plot::plotAdevOutput(const std::shared_ptr<const AdevOutput>& obs, siz
     addData(pinIndex, i++, obs->accelCorrelatedNoiseCorrelationTime.has_value() ? obs->accelCorrelatedNoiseCorrelationTime->x() : std::nan(""));
     addData(pinIndex, i++, obs->accelCorrelatedNoiseCorrelationTime.has_value() ? obs->accelCorrelatedNoiseCorrelationTime->y() : std::nan(""));
     addData(pinIndex, i++, obs->accelCorrelatedNoiseCorrelationTime.has_value() ? obs->accelCorrelatedNoiseCorrelationTime->z() : std::nan(""));
+    addData(pinIndex, i++, obs->accelBiasInstability.has_value() ? obs->accelBiasInstability->x() : std::nan(""));
+    addData(pinIndex, i++, obs->accelBiasInstability.has_value() ? obs->accelBiasInstability->y() : std::nan(""));
+    addData(pinIndex, i++, obs->accelBiasInstability.has_value() ? obs->accelBiasInstability->z() : std::nan(""));
+    addData(pinIndex, i++, obs->accelBiasInstabilityTau.has_value() ? obs->accelBiasInstabilityTau->x() : std::nan(""));
+    addData(pinIndex, i++, obs->accelBiasInstabilityTau.has_value() ? obs->accelBiasInstabilityTau->y() : std::nan(""));
+    addData(pinIndex, i++, obs->accelBiasInstabilityTau.has_value() ? obs->accelBiasInstabilityTau->z() : std::nan(""));
     // AdevOutput Gyroscope
     addData(pinIndex, i++, obs->gyroWhiteNoiseCoefficient.has_value() ? obs->gyroWhiteNoiseCoefficient->x() : std::nan(""));
     addData(pinIndex, i++, obs->gyroWhiteNoiseCoefficient.has_value() ? obs->gyroWhiteNoiseCoefficient->y() : std::nan(""));
     addData(pinIndex, i++, obs->gyroWhiteNoiseCoefficient.has_value() ? obs->gyroWhiteNoiseCoefficient->z() : std::nan(""));
-    addData(pinIndex, i++, obs->gyroBiasInstability.has_value() ? obs->gyroBiasInstability->x() : std::nan(""));
-    addData(pinIndex, i++, obs->gyroBiasInstability.has_value() ? obs->gyroBiasInstability->y() : std::nan(""));
-    addData(pinIndex, i++, obs->gyroBiasInstability.has_value() ? obs->gyroBiasInstability->z() : std::nan(""));
-    addData(pinIndex, i++, obs->gyroBiasInstabilityTau.has_value() ? obs->gyroBiasInstabilityTau->x() : std::nan(""));
-    addData(pinIndex, i++, obs->gyroBiasInstabilityTau.has_value() ? obs->gyroBiasInstabilityTau->y() : std::nan(""));
-    addData(pinIndex, i++, obs->gyroBiasInstabilityTau.has_value() ? obs->gyroBiasInstabilityTau->z() : std::nan(""));
     addData(pinIndex, i++, obs->gyroRandomWalkCoefficient.has_value() ? obs->gyroRandomWalkCoefficient->x() : std::nan(""));
     addData(pinIndex, i++, obs->gyroRandomWalkCoefficient.has_value() ? obs->gyroRandomWalkCoefficient->y() : std::nan(""));
     addData(pinIndex, i++, obs->gyroRandomWalkCoefficient.has_value() ? obs->gyroRandomWalkCoefficient->z() : std::nan(""));
@@ -3179,4 +3173,10 @@ void NAV::Plot::plotAdevOutput(const std::shared_ptr<const AdevOutput>& obs, siz
     addData(pinIndex, i++, obs->gyroCorrelatedNoiseCorrelationTime.has_value() ? obs->gyroCorrelatedNoiseCorrelationTime->x() : std::nan(""));
     addData(pinIndex, i++, obs->gyroCorrelatedNoiseCorrelationTime.has_value() ? obs->gyroCorrelatedNoiseCorrelationTime->y() : std::nan(""));
     addData(pinIndex, i++, obs->gyroCorrelatedNoiseCorrelationTime.has_value() ? obs->gyroCorrelatedNoiseCorrelationTime->z() : std::nan(""));
+    addData(pinIndex, i++, obs->gyroBiasInstability.has_value() ? obs->gyroBiasInstability->x() : std::nan(""));
+    addData(pinIndex, i++, obs->gyroBiasInstability.has_value() ? obs->gyroBiasInstability->y() : std::nan(""));
+    addData(pinIndex, i++, obs->gyroBiasInstability.has_value() ? obs->gyroBiasInstability->z() : std::nan(""));
+    addData(pinIndex, i++, obs->gyroBiasInstabilityTau.has_value() ? obs->gyroBiasInstabilityTau->x() : std::nan(""));
+    addData(pinIndex, i++, obs->gyroBiasInstabilityTau.has_value() ? obs->gyroBiasInstabilityTau->y() : std::nan(""));
+    addData(pinIndex, i++, obs->gyroBiasInstabilityTau.has_value() ? obs->gyroBiasInstabilityTau->z() : std::nan(""));
 }
