@@ -412,6 +412,12 @@ void NAV::AllanDeviation::receiveImuObs(NAV::InputPin::NodeDataQueue& queue, siz
         }
     }
 
+    // empty _cumSum for performance's sake
+    if (lastMessage)
+    {
+        _cumSum = std::array<std::vector<Eigen::Vector3d>, 2>{ { { Eigen::Vector3d::Zero() }, { Eigen::Vector3d::Zero() } } };
+    }
+
     auto adevOutput = std::make_shared<AdevOutput>();
     adevOutput->insTime = obs->insTime;
     prepareAdevOutput(adevOutput);
