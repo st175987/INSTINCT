@@ -1959,8 +1959,8 @@ void NAV::Plot::afterCreateLink(OutputPin& startPin, InputPin& endPin)
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel G² X [m²/s⁵]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel G² Y [m²/s⁵]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel G² Z [m²/s⁵]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Time X [s]");
-            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Time Y [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G X [s]");
+            _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Y [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel τ_G Z [s]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b X [m/s²]");
             _pinData.at(pinIndex).addPlotDataItem(i++, "Accel σ_b Y [m/s²]");
